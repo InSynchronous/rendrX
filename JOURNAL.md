@@ -42,3 +42,22 @@ in real graphics programming. They use matricies instead.
 Matricies are calculated on the CPU, and then pushed to the GPU, where
 the vertex shader takes them and uses them to move the point relative to
 the cameras perspective, rotation, etc.
+
+This wasn't hard to setup because the GLM library does all the hard math for you.
+
+### Input
+GLFW provides some input hooks I belive. I'm going to implement camera controls using them.
+`glfwGetKey`
+
+This was really easy to setup. I don't think fps will be an issue, but if someone on a
+supercomputer might travel at mach 5 due to the hard coded offsets.
+
+```c++
+glm::vec3 direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        direction.y = sin(glm::radians(pitch));
+        direction.z = sin(glm::radians(yaw));
+
+```
+
+I know its not ideal rn to use "look at", when i do have a direction matrix but who cares.

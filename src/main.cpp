@@ -51,7 +51,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow *window =
-        glfwCreateWindow(800, 600, "rendrX demonstration", NULL, NULL);
+        glfwCreateWindow(1280, 720, "rendrX demonstration", NULL, NULL);
 
     if (!window) {
         std::cerr << "Failed to create GLFW window, aborting!" << std::endl;
@@ -103,20 +103,62 @@ int main() {
     );
 
     glEnableVertexAttribArray(0);
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+    float pitch = 0.0f;
+    float yaw = -90.0f;
 
     while (!glfwWindowShouldClose(window)) {
         float time = glfwGetTime();
+
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            cameraPos.x += 0.1f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            cameraPos.x -= 0.1f;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraPos.z += 0.1f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraPos.z -= 0.1f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            cameraPos.y += 0.1f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            cameraPos.y -= 0.1f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            yaw -= 1.0f;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            yaw += 1.0f;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            pitch += 1.0f;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            pitch -= 1.0f;
+        }
+
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        direction.y = sin(glm::radians(pitch));
+        direction.z = sin(glm::radians(yaw));
 
         // Matricies
         glm::mat4 model =
             glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f));
 
-        // Look at origin while paning fom -2 to 2 world space
-        glm::mat4 view =
-            glm::lookAt(glm::vec3(sin(time) * 2.0f, 0.0f, 3.0f), // pos
-                        glm::vec3(0.0f, 0.0f, 0.0f),             // direction
-                        glm::vec3(0.0f, 1.0f, 0.0f)              // up
-            );
+        // Look at the triangle at origin ALWAYS
+        glm::mat4 view = glm::lookAt(cameraPos,                  // pos
+                                     cameraPos + direction,      // direction
+                                     glm::vec3(0.0f, 1.0f, 0.0f) // up
+        );
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), // FOV
                                                 800.0f / 600.0f, // aspect ratio
