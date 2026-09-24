@@ -3,6 +3,8 @@
 #include <glad/gl.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include <iostream>
 
 // Please note that I use an automated clang formatter. This is why my code
@@ -16,13 +18,17 @@ same thing.
 */
 const char *vertexShaderSource = R"(
     #version 330 core
-    layout (location = 0) in vec3 inputData;
+    layout (location = 0) in vec3 vertData;
+    layout (location = 1) in vec2 uvData;
+
+    out vec2 uvCoord;
 
     uniform mat4 model;
     uniform mat4 view;
     uniform mat4 projection;
     void main() {
-        gl_Position = projection * view * model * vec4(inputData, 1.0);
+        gl_Position = projection * view * model * vec4(vertData, 1.0);
+        uvCoord = uvData;
     }
 )";
 
@@ -32,9 +38,14 @@ solid color
 */
 const char *fragmentShaderSource = R"(
     #version 330 core
+
+    in vec2 uvCoord;
     out vec4 FragColor;
+
+    uniform sampler2D texture1;
+
     void main() {
-        FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+        FragColor = texture(texture1, uvCoord);
     }
 )";
 
@@ -80,10 +91,44 @@ int main() {
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    // tri mesh
-    float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
-                        0.0f,  0.0f,  0.5f, 0.0f};
+    // Load textures
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                    GL_REPEAT); // horizontal/u
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // vertical/v
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    int width, height, channels;
+
+    stbi_set_flip_vertically_on_load(true);
+
+    unsigned char *data =
+        stbi_load("texture.png", &width, &height, &channels, 0);
+
+    if (data) {
+        GLenum format = channels == 4 ? GL_RGBA : GL_RGB;
+
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
+                     GL_UNSIGNED_BYTE, data);
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    glUseProgram(shaderProgram);
+
+    int textureLocation = glGetUniformLocation(shaderProgram, "texture1");
+
+    glUniform1i(textureLocation, 0);
+
+    stbi_image_free(data);
+
+    // tri mesh
+    float vertices[] = {-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, 0.0f,
+                        1.0f,  0.0f,  0.0f, 0.5f, 0.0f, 0.5f, 1.0f};
     // upload triangle to gpu
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO); // 1 triangle/unique VAO
@@ -98,11 +143,19 @@ int main() {
                           3, // 3 components per vertex (Xyz)
                           GL_FLOAT, // is a float
                           GL_FALSE, // don't round?? idk i mean its a float lol
-                          3 * sizeof(float), // vertex size in vbo
+                          5 * sizeof(float), // vertex size in vbo
                           (void *)0          // no offset (0)
     );
-
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, // layout location = 1 as seen in frag shader
+                          2, // 2 components per vertex (Xyz)
+                          GL_FLOAT, // is a float
+                          GL_FALSE, // don't round?? idk i mean its a float lol
+                          5 * sizeof(float),          // vertex size in vbo
+                          (void *)(3 * sizeof(float)) // skip xyz offset (3)
+    );
+    glEnableVertexAttribArray(1);
+
     glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
     float pitch = 0.0f;
     float yaw = -90.0f;
@@ -180,6 +233,9 @@ int main() {
 
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1,
                            GL_FALSE, &projection[0][0]);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
 
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);

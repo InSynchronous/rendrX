@@ -46,18 +46,56 @@ the cameras perspective, rotation, etc.
 This wasn't hard to setup because the GLM library does all the hard math for you.
 
 ### Input
-GLFW provides some input hooks I belive. I'm going to implement camera controls using them.
+GLFW provides some input hooks I believe. I'm going to implement camera controls using them.
 `glfwGetKey`
 
-This was really easy to setup. I don't think fps will be an issue, but if someone on a
-supercomputer might travel at mach 5 due to the hard coded offsets.
+This was really easy to set up. I don't think FPS will be an issue, but if someone on a
+supercomputer might travel at Mach 5 due to the hard-coded offsets.
 
-```c++
+```
 glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        direction.y = sin(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw));
-
+direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+direction.y = sin(glm::radians(pitch));
+direction.z = sin(glm::radians(yaw));
 ```
 
 I know its not ideal rn to use "look at", when i do have a direction matrix but who cares.
+
+### textures
+Textuers rely on UV coordinates, which are xy pairs from 0 to 1. We need to add a UV coord
+to each vertex.
+
+```
+float vertices[] = {
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,   // xyz, ux,uy
+        0.5f, -0.5f, 0.0f,    1.0f, 0.0f,
+        0.0f,  0.5f, 0.0f,    0.5f, 1.0f
+}
+```
+
+
+Since we addedd allat, we can modify our input VAO explainer. We just change increment to
+5 that way it skips over UV coodinates. We also want to add another VAO just for UV coords.
+I'm starting to understand it now. VBO is raw bytes, VAO is a map to the bytes for the GPU.
+
+Next I took in the input in the vertex shader and just pass it to the fragment shader.
+This means our vertex shader outputs something, in this case, uv coords.
+
+```    
+#version 330 core
+
+in vec2 uvCoord;
+out vec4 FragColor;
+
+void main() {
+    FragColor = vec4(uvCoord.x, uvCoord.y, 0.0f, 1.0f);
+}
+```
+
+This should hopefully work.
+I see a beautiful UV triangle. Well now i have to somehow map an image on it. Fah.
+
+So basically the shader just uses a magic lookup func that returns a colo value,
+we still gotta use opengl to like well upload the texture.
+
+Also added something right before draw that tells opengl to bind that texture
