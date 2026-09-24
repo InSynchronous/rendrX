@@ -1,6 +1,8 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
 // Please note that I use an automated clang formatter. This is why my code
@@ -10,13 +12,17 @@
 
 /*
 Vertex shader I wrote. takes in a vector3 of a vertex's position, returns the
-same thing. tbd:projection maticies
+same thing.
 */
 const char *vertexShaderSource = R"(
     #version 330 core
     layout (location = 0) in vec3 inputData;
+
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 projection;
     void main() {
-        gl_Position = vec4(inputData.x, inputData.y, inputData.z, 1.0);
+        gl_Position = projection * view * model * vec4(inputData, 1.0);
     }
 )";
 
@@ -99,10 +105,40 @@ int main() {
     glEnableVertexAttribArray(0);
 
     while (!glfwWindowShouldClose(window)) {
+        float time = glfwGetTime();
+
+        // Matricies
+        glm::mat4 model =
+            glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f));
+
+        // Look at origin while paning fom -2 to 2 world space
+        glm::mat4 view =
+            glm::lookAt(glm::vec3(sin(time) * 2.0f, 0.0f, 3.0f), // pos
+                        glm::vec3(0.0f, 0.0f, 0.0f),             // direction
+                        glm::vec3(0.0f, 1.0f, 0.0f)              // up
+            );
+
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), // FOV
+                                                800.0f / 600.0f, // aspect ratio
+                                                0.1f,            // near
+                                                100.0f           // far
+        );
+
         glClearColor(0.1, 0.2, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram); // select
+        // configure matricies
+        glUseProgram(shaderProgram);
+
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1,
+                           GL_FALSE, &model[0][0]);
+
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1,
+                           GL_FALSE, &view[0][0]);
+
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1,
+                           GL_FALSE, &projection[0][0]);
+
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 

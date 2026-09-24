@@ -27,3 +27,18 @@ Just wasted so long to learn i needed
 
 Nvm that didn't work. Time to use GLAD.
 
+### matricies
+Ok so to my knowledge of 3d graphics, its not that hard to get perspective
+given x, y, z, return x' and y' such that x',y' represents the 2D projection
+of x,y,z
+
+```
+x' = x/z
+y' = y/z
+```
+I used this technique a lot during software rendering, but this doesnt fly
+in real graphics programming. They use matricies instead.
+
+Matricies are calculated on the CPU, and then pushed to the GPU, where
+the vertex shader takes them and uses them to move the point relative to
+the cameras perspective, rotation, etc.
