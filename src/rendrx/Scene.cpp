@@ -217,6 +217,10 @@ void Scene::render() {
     glBindTexture(GL_TEXTURE_2D, texture);
 
     glBindVertexArray(VAO);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
     glDrawArrays(GL_TRIANGLES, 0, triangles.size() * 3);
 
     glfwSwapBuffers(window);

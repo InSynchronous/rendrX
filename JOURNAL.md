@@ -141,3 +141,22 @@ CONFIGURE_DEPENDS:
 
 Alright. I just got it to compile, and nothing showed up on my screen. Great. Debug time.
 Turns out the mistake was forgetting the minus sign in `-90.0f` yaw. Waste of time.
+
+### cubes n stuff
+I wrote up the coodinates for a cube made of 12 triangles, two per face by hand, and then rendered.
+As expected, it created a really weird look, likely because the order of rendering is cooked.
+This is probably because I'm rendering triangles that are behind the front of the block last,
+which probably screws everything up. I'm gonna do some more researcch on this topic.
+
+
+### Backface culling
+So basically things behind you are a different rotation in terms of A B and C than things
+infornt of you. Its hard to explain without images but the math works.
+```
+glEnable(GL_CULL_FACE);
+glCullFace(GL_BACK);
+glFrontFace(GL_CCW);
+```
+
+And since I from the start wrote the coorrdinates in the correct order (prob cuz i stole
+them from a prev project). It worked perfectly. 
