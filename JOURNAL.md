@@ -99,3 +99,45 @@ So basically the shader just uses a magic lookup func that returns a colo value,
 we still gotta use opengl to like well upload the texture.
 
 Also added something right before draw that tells opengl to bind that texture
+
+## September 24, 2026
+```
+#include "rendrx/Scene.h"
+#include "rendrx/Triangle.h"
+
+int main() {
+    rendrx::Scene scene;
+    rendrx::Triangle tri = {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f},
+                            {0.5f, -0.5f, 0.0f},  {1.0f, 0.0f},
+                            {0.0f, 0.5f, 0.0f},   {0.5f, 1.0f}};
+    scene.addTriangle(tri);
+    scene.launch();
+
+    while (!scene.shouldClose()) {
+        scene.render();
+    }
+
+    return 0;
+}
+```
+
+It's refactor day! I came up with my "ideal usage" and then started creating files.
+After like 17 minutes of work I got all the header files done. I reused the
+Vector3/Vector2 classes from previous projects for simplicity.
+
+51 minutes in, I have a Scene.cpp class and I've porrted most of the code over copy paste. Now
+all that's left is the render loop. I changed pitch and yaw for camera rotation to use glm:vec3
+Wait. GLM has a vector3, why did i make a vector3 class myself. Smh. Ok well thats for a later 
+refactor.
+
+Ngl. the build system failed to compile my vector3 class, its probably an easy patch, but im lazy.
+Lets just switch to GLM ig. Well I can't avoid it, turns out i configured CMAKE wrong. Had to add
+CONFIGURE_DEPENDS:
+
+```file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+    src/*.cpp
+)
+```
+
+Alright. I just got it to compile, and nothing showed up on my screen. Great. Debug time.
+Turns out the mistake was forgetting the minus sign in `-90.0f` yaw. Waste of time.
