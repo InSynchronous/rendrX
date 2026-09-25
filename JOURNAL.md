@@ -249,3 +249,11 @@ I just divided everything by 2 and it worked. Smh.
 Anddd it didn't. Turns out textures are 10x10 not 16x16 or 8x8. I hate this.
 
 Ykw this sucks. I'm switching to a 256x256 atlas. It works now.
+
+### period 3 at school time
+I decided to wrap this sketchy atlas code into a helper.
+
+
+This took way too long, since I added a new constructor for Quad that just
+takes in 3 points and a pair of two UV coordinates for the bottom left and right
+aka the same format that the atlas helper returns.

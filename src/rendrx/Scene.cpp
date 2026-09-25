@@ -1,5 +1,4 @@
 #include "Scene.h"
-#include "rendrx/Triangle.h"
 #include <iostream>
 #include <memory>
 #include <vector>
