@@ -177,3 +177,75 @@ I'll make a QUAD primative now. It's pretty simple.
 
 Quad primative simplyy takes in 4 points and generates 2 triangles when it flattens.
 This project lwk is evolving into a minecraft clone ngl.....
+
+## September 25th, 2026
+I want to get a couple things working to keep this engine good for the future. First,
+I want to get multiple textures loading. Currently, the top of the cube is the same
+texture as the sides. Same with its bottom. I need to figure out how to switch textures
+for different objects.
+
+### textures
+I read the code that hanldes texutres and its pretty simple.
+Basically the main part thats important is this:
+
+```
+glUseProgram(shaderProgram);
+int textureLocation = glGetUniformLocation(shaderProgram, "texture1");
+```
+We pull out the location in the shader of where the input "texture1" is.
+
+Then, we say 
+```
+glUniform1i(textureLocation, 0);
+```
+
+This basically tells opengl to bind that texture location to 0. 
+Recall in our draw loop:
+```
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, texture);
+```
+
+Our shader is configured to read from 0, and we set 0 to the texture.
+
+Originally, my thought was to just change what GL_TEXTURE0 means by swapping
+the texture int it poitns to. But this is really slow, also would break my
+refactoring of the draw loop taking in flattened triangles only.
+
+Turns out, theres a simple solution, the texture atlas.
+
+I basically imported a large minecraft atlas, 512x512, and now,
+instead of setting uv coords to like 0 to 1, i can do like 0 to 1/(row len)
+
+I hard coded the UV tiles real quick, just to see if it works.
+
+And voila, a nether wart cube. Well let's try to find a different more useful
+block.
+
+```
+constexpr float u0 = 0.0f;
+constexpr float v0 = 0.0f;
+constexpr float u1 = 32.0f / 512.0f;
+constexpr float v1 = 32.0f / 512.0f;
+```
+
+
+All I have to do is tinker with these values till I get something useful
+```
+constexpr float x = 0;
+constexpr float y = 0;
+constexpr float u0 = x * 32.0f / 512.0f;
+constexpr float v0 = y * 32.0f / 512.0f;
+constexpr float u1 = (x + 1) * 32.0f / 512.0f;
+constexpr float v1 = (y + 1) * 32.0f / 512.0f;
+```
+
+Using this neat formula, I can cycle through blocks. It was looking really
+weird though. I just realized. It's because the image is 512x256 not 512x512.
+
+I changed the formulas to reflect. It looked like it was showing me 4 blocks.
+I just divided everything by 2 and it worked. Smh. 
+
+Anddd it didn't. Turns out textures are 10x10 not 16x16 or 8x8. I hate this.
+
+Ykw this sucks. I'm switching to a 256x256 atlas. It works now.
