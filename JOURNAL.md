@@ -52,7 +52,7 @@ GLFW provides some input hooks I believe. I'm going to implement camera controls
 This was really easy to set up. I don't think FPS will be an issue, but if someone on a
 supercomputer might travel at Mach 5 due to the hard-coded offsets.
 
-```
+```cpp
 glm::vec3 direction;
 direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 direction.y = sin(glm::radians(pitch));
@@ -65,7 +65,7 @@ I know its not ideal rn to use "look at", when i do have a direction matrix but 
 Textuers rely on UV coordinates, which are xy pairs from 0 to 1. We need to add a UV coord
 to each vertex.
 
-```
+```cpp
 float vertices[] = {
         -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,   // xyz, ux,uy
         0.5f, -0.5f, 0.0f,    1.0f, 0.0f,
@@ -81,7 +81,7 @@ I'm starting to understand it now. VBO is raw bytes, VAO is a map to the bytes f
 Next I took in the input in the vertex shader and just pass it to the fragment shader.
 This means our vertex shader outputs something, in this case, uv coords.
 
-```    
+```glsl
 #version 330 core
 
 in vec2 uvCoord;
@@ -101,7 +101,7 @@ we still gotta use opengl to like well upload the texture.
 Also added something right before draw that tells opengl to bind that texture
 
 ## September 24, 2026
-```
+```cpp
 #include "rendrx/Scene.h"
 #include "rendrx/Triangle.h"
 
@@ -134,7 +134,8 @@ Ngl. the build system failed to compile my vector3 class, its probably an easy p
 Lets just switch to GLM ig. Well I can't avoid it, turns out i configured CMAKE wrong. Had to add
 CONFIGURE_DEPENDS:
 
-```file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
+```cmake
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     src/*.cpp
 )
 ```
@@ -152,7 +153,7 @@ which probably screws everything up. I'm gonna do some more researcch on this to
 ### Backface culling
 So basically things behind you are a different rotation in terms of A B and C than things
 infornt of you. Its hard to explain without images but the math works.
-```
+```cpp
 glEnable(GL_CULL_FACE);
 glCullFace(GL_BACK);
 glFrontFace(GL_CCW);
@@ -188,20 +189,20 @@ for different objects.
 I read the code that hanldes texutres and its pretty simple.
 Basically the main part thats important is this:
 
-```
+```cpp
 glUseProgram(shaderProgram);
 int textureLocation = glGetUniformLocation(shaderProgram, "texture1");
 ```
 We pull out the location in the shader of where the input "texture1" is.
 
 Then, we say 
-```
+```cpp
 glUniform1i(textureLocation, 0);
 ```
 
 This basically tells opengl to bind that texture location to 0. 
 Recall in our draw loop:
-```
+```cpp
 glActiveTexture(GL_TEXTURE0);
 glBindTexture(GL_TEXTURE_2D, texture);
 ```
@@ -222,7 +223,7 @@ I hard coded the UV tiles real quick, just to see if it works.
 And voila, a nether wart cube. Well let's try to find a different more useful
 block.
 
-```
+```cpp
 constexpr float u0 = 0.0f;
 constexpr float v0 = 0.0f;
 constexpr float u1 = 32.0f / 512.0f;
@@ -231,7 +232,7 @@ constexpr float v1 = 32.0f / 512.0f;
 
 
 All I have to do is tinker with these values till I get something useful
-```
+```cpp
 constexpr float x = 0;
 constexpr float y = 0;
 constexpr float u0 = x * 32.0f / 512.0f;
@@ -257,3 +258,33 @@ I decided to wrap this sketchy atlas code into a helper.
 This took way too long, since I added a new constructor for Quad that just
 takes in 3 points and a pair of two UV coordinates for the bottom left and right
 aka the same format that the atlas helper returns.
+
+### next steps for the project
+Lwk realized making minecraft might be a easier, and more finishable project.
+Voxel engines are pretty simple. You have a Chunk class, that holds blocks, 
+then you loop through each block in a chunk, checking its neighbors, to then
+selectively decide what quads to add to the object list, then render.
+
+I don't really know anything about updating objects in the VBO yet.
+Let's just focus on getting the block system to work for now.
+
+I created the block class and I'm going to see if I can use its abstractions.
+
+### blocks
+After a traditional segfault (i tried to move a pointer I already moved),
+I got it to work.
+
+```cpp
+auto uv = rendrx::getUV(3, 15);
+    Block block({0, 0, 0}, uv); // block at origin
+
+    scene.addObject(block.getFront());
+    scene.addObject(block.getBack());
+    scene.addObject(block.getLeft());
+    scene.addObject(block.getRight());
+    scene.addObject(block.getTop());
+    scene.addObject(block.getBottom());
+```
+
+Although the current way I'm doing uv is not the way I want to do it,
+for now this is fine.
