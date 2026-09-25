@@ -1,11 +1,14 @@
 #include "Scene.h"
 #include "rendrx/Triangle.h"
 #include <iostream>
+#include <memory>
 #include <vector>
 
 using namespace rendrx;
 
-void Scene::addTriangle(Triangle t) { triangles.push_back(t); }
+void Scene::addObject(std::unique_ptr<Object> o) {
+    objects.push_back(std::move(o));
+}
 
 void Scene::init() {
     std::cout << "Initializing" << std::endl;
@@ -91,14 +94,11 @@ void Scene::loadTextures() {
 void Scene::uploadTriangles() {
     // Flatten the array
     std::vector<float> vertices;
-    for (const Triangle &tri : triangles) {
-        vertices.insert(vertices.end(),
-                        {tri.p1.x, tri.p1.y, tri.p1.z, tri.u1.x, tri.u1.y,
-
-                         tri.p2.x, tri.p2.y, tri.p2.z, tri.u2.x, tri.u2.y,
-
-                         tri.p3.x, tri.p3.y, tri.p3.z, tri.u3.x, tri.u3.y});
+    for (const std::unique_ptr<Object> &obj : objects) {
+        auto v = obj->flatten();
+        vertices.insert(vertices.end(), v.begin(), v.end());
     }
+    vertex_count = vertices.size();
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO); // select our vbo
@@ -221,7 +221,7 @@ void Scene::render() {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glDrawArrays(GL_TRIANGLES, 0, triangles.size() * 3);
+    glDrawArrays(GL_TRIANGLES, 0, vertex_count);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

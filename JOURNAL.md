@@ -160,3 +160,20 @@ glFrontFace(GL_CCW);
 
 And since I from the start wrote the coorrdinates in the correct order (prob cuz i stole
 them from a prev project). It worked perfectly. 
+
+### More primatives
+Right now I only support triangles, but that's going to become an issue. The solution 
+is to make an abstract class/interface that has a comprerssion featuer that turns it
+into a vector of floats in the p1p2p3uxuv format.
+
+I'll begin.
+
+
+It took a little longer than usual for me since I forgot basically everything about 
+abstraction in C++ after writing Java for a month, so I had to rewatch some videos.
+Eventually, I got it to work with the new Object system.
+
+I'll make a QUAD primative now. It's pretty simple.
+
+Quad primative simplyy takes in 4 points and generates 2 triangles when it flattens.
+This project lwk is evolving into a minecraft clone ngl.....
