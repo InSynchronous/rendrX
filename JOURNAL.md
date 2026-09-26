@@ -311,3 +311,13 @@ The bug was me gettting my + and - wrong for Z.
 
 It works but there's a weird effect when I get close. Oh wait i turned off
 backface culling. Re-enabling it made everything work.
+
+### QoL
+ - I made WASD relative to the camera
+ - I made the initial camera position and rotation better
+ - Press `p` to toggle polygon view
+
+Next steps:
+ - enum blocks that have different textures per face
+ - infinite chunking
+ - terrain generation

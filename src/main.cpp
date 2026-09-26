@@ -35,7 +35,6 @@ int main() {
     scene.launch();
 
     while (!scene.shouldClose()) {
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         scene.render();
     }
 

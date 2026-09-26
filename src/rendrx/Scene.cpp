@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include <GLFW/glfw3.h>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -135,25 +136,6 @@ void Scene::launch() {
 void Scene::render() {
     float time = glfwGetTime();
 
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cameraPos.x += 0.1f;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cameraPos.x -= 0.1f;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cameraPos.z += 0.1f;
-    }
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cameraPos.z -= 0.1f;
-    }
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        cameraPos.y += 0.1f;
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        cameraPos.y -= 0.1f;
-    }
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
         cameraRot.z -= 1.0f;
     }
@@ -180,6 +162,42 @@ void Scene::render() {
     direction.z = sin(yaw) * cos(pitch);
 
     direction = glm::normalize(direction);
+
+    glm::vec3 forward =
+        glm::normalize(glm::vec3(direction.x, 0.0f, direction.z));
+    glm::vec3 right =
+        glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+    float speed = 0.1f;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        cameraPos += forward * speed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        cameraPos -= forward * speed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        cameraPos -= right * speed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        cameraPos += right * speed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        cameraPos.y += speed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        cameraPos.y -= speed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 
     // Matricies
     glm::mat4 model =
