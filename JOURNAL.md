@@ -298,3 +298,16 @@ I'll start setting up a chunk class.
 Well that worked. I had to add an isAir property and a default constructor, but
 after a segfault or two, I got it to work. Next step is to stop rendering mutual
 faces.
+
+### culling
+If you neighbor is air, then only render the face, othherwise its covered and
+is useless. this took a while to implement, had to enable polygon mode
+
+```cpp
+glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+```
+
+The bug was me gettting my + and - wrong for Z.
+
+It works but there's a weird effect when I get close. Oh wait i turned off
+backface culling. Re-enabling it made everything work.
