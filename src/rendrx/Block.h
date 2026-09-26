@@ -7,10 +7,14 @@
 namespace rendrx {
 class Block {
   private:
+    bool air = true;
     std::unique_ptr<Quad> front, back, top, bottom, right, left;
 
   public:
+    Block() = default;
     Block(glm::vec3 pos, std::pair<glm::vec2, glm::vec2> uv);
+
+    bool isAir() const { return air; }
 
     std::unique_ptr<Quad> getFront();
     std::unique_ptr<Quad> getBack();

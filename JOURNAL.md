@@ -276,15 +276,25 @@ I got it to work.
 
 ```cpp
 auto uv = rendrx::getUV(3, 15);
-    Block block({0, 0, 0}, uv); // block at origin
+Block block({0, 0, 0}, uv); // block at origin
 
-    scene.addObject(block.getFront());
-    scene.addObject(block.getBack());
-    scene.addObject(block.getLeft());
-    scene.addObject(block.getRight());
-    scene.addObject(block.getTop());
-    scene.addObject(block.getBottom());
+scene.addObject(block.getFront());
+scene.addObject(block.getBack());
+scene.addObject(block.getLeft());
+scene.addObject(block.getRight());
+scene.addObject(block.getTop());
+scene.addObject(block.getBottom());
 ```
 
 Although the current way I'm doing uv is not the way I want to do it,
 for now this is fine.
+
+## September 26th, 2026
+I wan't to get face culling and chunking done today. This basically means i don't
+render blocks whose face is covered by another block.
+
+I'll start setting up a chunk class.
+
+Well that worked. I had to add an isAir property and a default constructor, but
+after a segfault or two, I got it to work. Next step is to stop rendering mutual
+faces.

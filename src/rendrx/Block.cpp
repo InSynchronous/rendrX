@@ -2,7 +2,8 @@
 #include <utility>
 
 namespace rendrx {
-Block::Block(glm::vec3 pos, std::pair<glm::vec2, glm::vec2> uv) : pos(pos) {
+Block::Block(glm::vec3 pos, std::pair<glm::vec2, glm::vec2> uv)
+    : pos(pos), air(false) {
     float s = 0.5f;
 
     // Front (+Z)
