@@ -19,13 +19,14 @@ class World {
         }
     };
 
+    std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash> chunks;
+    friend class Scene;
+
   public:
     World(int seed) : seed(seed) {};
 
-    // People should be able to read chunks and write to them, its fine
-    std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash> chunks;
-
     void loadChunks(glm::ivec2 position, size_t radius);
+    void generateMeshes();
     Block &getBlock(glm::vec3 position);
 };
 } // namespace rendrx

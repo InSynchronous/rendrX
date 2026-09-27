@@ -37,3 +37,40 @@ Block &World::getBlock(glm::vec3 position) {
     return it->second->getBlock(
         {localX, static_cast<int>(std::floor(position.y)), localZ});
 }
+
+void World::generateMeshes() {
+    for (auto &[position, chunk] : chunks) {
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 16; j++) {
+                for (int k = 0; k < 16; k++) {
+                    glm::vec3 worldPos{position.x * 16 + i, j,
+                                       position.y * 16 + k};
+
+                    Block &b = getBlock(worldPos);
+
+                    if (b.isAir()) {
+                        continue;
+                    }
+
+                    if (getBlock(worldPos + glm::vec3{0, 0, -1}).isAir())
+                        chunk->addObject(b.getBack());
+
+                    if (getBlock(worldPos + glm::vec3{0, 0, 1}).isAir())
+                        chunk->addObject(b.getFront());
+
+                    if (getBlock(worldPos + glm::vec3{0, 1, 0}).isAir())
+                        chunk->addObject(b.getTop());
+
+                    if (getBlock(worldPos + glm::vec3{0, -1, 0}).isAir())
+                        chunk->addObject(b.getBottom());
+
+                    if (getBlock(worldPos + glm::vec3{-1, 0, 0}).isAir())
+                        chunk->addObject(b.getLeft());
+
+                    if (getBlock(worldPos + glm::vec3{1, 0, 0}).isAir())
+                        chunk->addObject(b.getRight());
+                }
+            }
+        }
+    }
+}

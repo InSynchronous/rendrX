@@ -33,6 +33,7 @@ target_include_directories(rendrX PRIVATE
 
 target_compile_options(rendrX PRIVATE
     -O3
+    -g
 )
 
 if(MINGW)

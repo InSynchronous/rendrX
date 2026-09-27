@@ -343,3 +343,63 @@ chunk. It will error if someone tries to reach a block that doesn't exist but wh
 Wait, i'm dumb, my code will of course do that. Uhhhghghghgh. Let me make a patch.
 
 I just check if its out of bounds, if so I just return air.
+
+### Cycle out terrain at will?
+Right now, the system uploads meshes to the VBO, ONCE. Then never again.
+I need to research how to update it.
+
+I'm considering giving each chunk its own VAO/VBO. This will destroy the line between
+rendrx, and the minecraft clone, but honestly, at this point, a mc clone is what I really want.
+Rendrx is now a VOXEL engine.
+
+Current pipeline
+```
+World.generateMeshes(&Scene) -> Chunks -> Block -> (culling) -> Quad -> Scene.addObject(Quad) -> Quad.flatten() -> VAO/VBO
+```
+
+Target pipeline
+```
+world.generatemeshes(&scene) -> chunks -> block -> quad -> quad.flatten() -> vao/vbo
+
+friend classes so scene can access private member: chunks
+
+scene -> addworld(&world) -> chunks -> chunk.draw()
+```
+
+### Implementation
+This is going to take a while I asssume....
+
+Yea I can't even descrribe how locked in i was, i didn't take anyy notes
+
+I did segfault, but I know why. I'm instantiating the vao/vbo in the constructor before a context was opened. whoops
+
+```gdb
+Program received signal SIGSEGV, Segmentation fault.
+0x0000000000000000 in ?? ()
+(gdb) bt
+#0  0x0000000000000000 in ?? ()
+#1  0x0000555555557ab5 in rendrx::Chunk::Chunk (this=this@entry=0x7ffff75b7010, chunkCoord=..., chunkCoord@entry=...)
+    at /home/ahsan/repos/rendrX/src/rendrx/Chunk.cpp:15
+#2  0x0000555555559d7e in std::make_unique<rendrx::Chunk, glm::vec<2, int, (glm::qualifier)0>&> ()
+    at /usr/include/c++/16/bits/unique_ptr.h:1104
+#3  rendrx::World::loadChunks (this=this@entry=0x7fffffffd2e0, position=..., position@entry=..., radius=radius@entry=5)
+    at /home/ahsan/repos/rendrX/src/rendrx/World.cpp:17
+#4  0x0000555555556a96 in main () at /home/ahsan/repos/rendrX/src/main.cpp:9
+(gdb)
+```
+
+
+OMG IT WORRKED!!
+Dude I can not express how complex this refactor was, but I managed to pull it off by just limiting my overthinking.
+It really did work though. I just moved the opengl context creation into the constructor of Scene instead.
+
+
+### Docs
+ - Create a scene, which initializes glfw and glad
+ - Create a world
+ - load chunks in the world, generating chunks, chunks also initialize their vao/vbo
+ - compile chunk into meshes (quads)
+ - Add a world to the scene (its a reference)
+ - launch scene, which goes to each of the world's chunks internally and tells them to upload triangles
+ - run infinite loop
+ - scene.render goes to each chunk and runs .draw()

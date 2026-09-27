@@ -6,11 +6,7 @@
 
 using namespace rendrx;
 
-void Scene::addObject(std::unique_ptr<Object> o) {
-    objects.push_back(std::move(o));
-}
-
-void Scene::init() {
+Scene::Scene() {
     std::cout << "Initializing" << std::endl;
 
     if (!glfwInit()) {
@@ -31,7 +27,9 @@ void Scene::init() {
     if (!gladLoadGL(glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD\n";
     }
+}
 
+void Scene::init() {
     // Compile the shaders at runtime
     // idk bout how ur supposed to do it in prod yet
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -47,13 +45,6 @@ void Scene::init() {
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
-
-    // setup buffers
-    glGenVertexArrays(1, &VAO); // 1 triangle/unique VAO
-    glGenBuffers(1, &VBO);      // 1 buffer? still unsure
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); // select our vbo
 }
 
 void Scene::loadTextures() {
@@ -91,40 +82,12 @@ void Scene::loadTextures() {
     stbi_image_free(data);
 }
 
+void Scene::addWorld(World &world) { this->world = &world; }
+
 void Scene::uploadTriangles() {
-    // Flatten the array
-    std::vector<float> vertices;
-    for (const std::unique_ptr<Object> &obj : objects) {
-        auto v = obj->flatten();
-        vertices.insert(vertices.end(), v.begin(), v.end());
+    for (auto &[position, chunk] : world->chunks) {
+        chunk->uploadTriangles();
     }
-    vertex_count = vertices.size();
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); // select our vbo
-
-    // Upload vertecies to the VBO
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
-                 vertices.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, // layout location = 0 as seen in frag shader
-                          3, // 3 components per vertex (Xyz)
-                          GL_FLOAT, // is a float
-                          GL_FALSE, // don't round?? idk i mean its a float lol
-                          5 * sizeof(float), // vertex size in vbo
-                          (void *)0          // no offset (0)
-    );
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, // layout location = 1 as seen in frag shader
-                          2, // 2 components per vertex (uv)
-                          GL_FLOAT, // is a float
-                          GL_FALSE, // don't round?? idk i mean its a float lol
-                          5 * sizeof(float),          // vertex size in vbo
-                          (void *)(3 * sizeof(float)) // skip xyz offset (3)
-    );
-
-    glEnableVertexAttribArray(1);
 }
 
 void Scene::launch() {
@@ -212,7 +175,7 @@ void Scene::render() {
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), // FOV
                                             800.0f / 600.0f,     // aspect ratio
                                             0.1f,                // near
-                                            100.0f               // far
+                                            500.0f               // far
     );
 
     glClearColor(0.1, 0.2, 0.3, 1.0);
@@ -233,12 +196,13 @@ void Scene::render() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    glBindVertexArray(VAO);
-
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+
+    for (auto &[position, chunk] : world->chunks) {
+        chunk->draw();
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();

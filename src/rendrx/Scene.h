@@ -1,27 +1,23 @@
 #pragma once
 
-#include "rendrx/Triangle.h"
-#include <memory>
-#include <vector>
+#include "rendrx/World.h"
 #define GLFW_INCLUDE_NONE
-#include "Object.h"
 #include "stb_image.h"
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 
 namespace rendrx {
 class Scene {
   private:
     GLFWwindow *window;
-    unsigned int vertexShader, fragmentShader, shaderProgram, texture, VBO, VAO,
-        vertex_count;
+    unsigned int vertexShader, fragmentShader, shaderProgram, texture;
     glm::vec3 cameraPos = glm::vec3(0.0f, 2.0f, 3.0f);
     glm::vec3 cameraRot = glm::vec3(0.0f, 0.0f, 55.0f);
 
-    std::vector<std::unique_ptr<Object>> objects;
+    World *world = nullptr;
+
     /*
        Vertex shader I wrote. takes in a vector3 of a vertex's position, returns
        the same thing.
@@ -65,7 +61,8 @@ class Scene {
     void uploadTriangles();
 
   public:
-    void addObject(std::unique_ptr<Object> o);
+    Scene();
+    void addWorld(World &world);
     bool shouldClose();
     void launch();
     void render();
