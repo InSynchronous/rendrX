@@ -407,6 +407,19 @@ It really did work though. I just moved the opengl context creation into the con
 ### Main objective: Chunks loading and unloading
 Easiest way to do this is to detect when a player crossees chunks, and do the following
  - re-run loadChunks (make sure its map aware and doesn't regenerate alr loaded chunks)
- - refactor so loadChunks also uploadsTriangles so that Scene doesn't do it ever
  - go through chunk list and terminate all not in radius
+ - re run generation?
+ - refactor so generateMeshes also uploadsTriangles so that Scene doesn't do it ever
  - buisness as usual?
+
+Detecting chunk changes is interesting. Let me see. Right now we use cameraPos as playerPos.
+Need to think.... We can use a prev position perhaps.
+
+I needed to make a way so that people can see camera pos but not edit it. Turns out const references are a thing.
+I really do need to brush up on my CPP knowledge and re-read cpp primer again. One day.
+
+
+### done
+I added an unloader, that just goes through each chunk, calcualtes tthe disttance from the player, and then
+just checks if thats outside our render distance, if so it errases it. Since its a smart pointer, it
+deallocates it for us!! :)

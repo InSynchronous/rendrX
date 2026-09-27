@@ -14,7 +14,25 @@ void World::loadChunks(glm::ivec2 position, size_t radius) {
         for (int y = -maxY; y <= maxY; ++y) {
             glm::ivec2 chunkPos = position + glm::ivec2{x, y};
 
-            chunks[chunkPos] = std::make_unique<Chunk>(chunkPos);
+            auto it = chunks.find(chunkPos);
+            if (it == chunks.end()) {
+                // only generate if not alr known
+                chunks[chunkPos] = std::make_unique<Chunk>(chunkPos);
+            }
+        }
+    }
+}
+
+void World::unloadChunks(glm::ivec2 position, size_t radius) {
+    int rSquared = static_cast<int>(radius * radius);
+
+    for (auto it = chunks.begin(); it != chunks.end();) {
+        glm::ivec2 delta = it->first - position;
+
+        if (delta.x * delta.x + delta.y * delta.y > rSquared) {
+            it = chunks.erase(it);
+        } else {
+            ++it;
         }
     }
 }

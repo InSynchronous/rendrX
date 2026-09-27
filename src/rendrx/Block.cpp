@@ -38,11 +38,28 @@ Block::Block(glm::vec3 pos, std::pair<glm::vec2, glm::vec2> uv)
 }
 
 // Getters
-std::unique_ptr<Quad> Block::getFront() { return std::move(front); }
-std::unique_ptr<Quad> Block::getBack() { return std::move(back); }
-std::unique_ptr<Quad> Block::getTop() { return std::move(top); }
-std::unique_ptr<Quad> Block::getBottom() { return std::move(bottom); }
-std::unique_ptr<Quad> Block::getRight() { return std::move(right); }
-std::unique_ptr<Quad> Block::getLeft() { return std::move(left); }
+std::unique_ptr<Quad> Block::getFront() const {
+    return std::make_unique<Quad>(*front);
+}
+
+std::unique_ptr<Quad> Block::getBack() const {
+    return std::make_unique<Quad>(*back);
+}
+
+std::unique_ptr<Quad> Block::getTop() const {
+    return std::make_unique<Quad>(*top);
+}
+
+std::unique_ptr<Quad> Block::getBottom() const {
+    return std::make_unique<Quad>(*bottom);
+}
+
+std::unique_ptr<Quad> Block::getRight() const {
+    return std::make_unique<Quad>(*right);
+}
+
+std::unique_ptr<Quad> Block::getLeft() const {
+    return std::make_unique<Quad>(*left);
+}
 
 } // namespace rendrx

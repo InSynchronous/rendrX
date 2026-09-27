@@ -123,6 +123,8 @@ void Scene::render() {
         glm::normalize(glm::vec3(direction.x, 0.0f, direction.z));
     glm::vec3 right =
         glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+    prevCameraPos = cameraPos;
     float speed = 0.1f;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {

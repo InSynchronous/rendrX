@@ -13,7 +13,8 @@ class Scene {
   private:
     GLFWwindow *window;
     unsigned int vertexShader, fragmentShader, shaderProgram, texture;
-    glm::vec3 cameraPos = glm::vec3(0.0f, 2.0f, 3.0f);
+    glm::vec3 prevCameraPos = glm::vec3(0.0f, 2.0f, 3.0f);
+    glm::vec3 cameraPos = prevCameraPos;
     glm::vec3 cameraRot = glm::vec3(0.0f, 0.0f, 55.0f);
 
     World *world = nullptr;
@@ -65,5 +66,9 @@ class Scene {
     bool shouldClose();
     void launch();
     void render();
+
+    const glm::vec3 &getCameraPos() const { return cameraPos; }
+    const glm::vec3 &getPrevCameraPos() const { return prevCameraPos; }
+    const glm::vec3 &getCameraRot() const { return cameraRot; }
 };
 } // namespace rendrx

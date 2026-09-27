@@ -26,6 +26,7 @@ class World {
     World(int seed) : seed(seed) {};
 
     void loadChunks(glm::ivec2 position, size_t radius);
+    void unloadChunks(glm::ivec2 position, size_t radius);
     void generateMeshes();
     Block &getBlock(glm::vec3 position);
 };

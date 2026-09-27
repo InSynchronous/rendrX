@@ -16,12 +16,12 @@ class Block {
 
     bool isAir() const { return air; }
 
-    std::unique_ptr<Quad> getFront();
-    std::unique_ptr<Quad> getBack();
-    std::unique_ptr<Quad> getTop();
-    std::unique_ptr<Quad> getBottom();
-    std::unique_ptr<Quad> getRight();
-    std::unique_ptr<Quad> getLeft();
+    std::unique_ptr<Quad> getFront() const;
+    std::unique_ptr<Quad> getBack() const;
+    std::unique_ptr<Quad> getTop() const;
+    std::unique_ptr<Quad> getBottom() const;
+    std::unique_ptr<Quad> getRight() const;
+    std::unique_ptr<Quad> getLeft() const;
 
     glm::vec3 pos;
 };

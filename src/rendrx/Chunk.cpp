@@ -42,6 +42,7 @@ void Chunk::uploadTriangles() {
         auto v = obj->flatten();
         vertices.insert(vertices.end(), v.begin(), v.end());
     }
+    objects.clear();
     vertex_count = vertices.size();
 
     glBindVertexArray(VAO);
