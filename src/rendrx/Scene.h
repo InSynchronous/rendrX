@@ -58,7 +58,6 @@ class Scene {
 
     void init();
     void loadTextures();
-    void uploadTriangles();
 
   public:
     Scene();

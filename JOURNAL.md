@@ -403,3 +403,10 @@ It really did work though. I just moved the opengl context creation into the con
  - launch scene, which goes to each of the world's chunks internally and tells them to upload triangles
  - run infinite loop
  - scene.render goes to each chunk and runs .draw()
+
+### Main objective: Chunks loading and unloading
+Easiest way to do this is to detect when a player crossees chunks, and do the following
+ - re-run loadChunks (make sure its map aware and doesn't regenerate alr loaded chunks)
+ - refactor so loadChunks also uploadsTriangles so that Scene doesn't do it ever
+ - go through chunk list and terminate all not in radius
+ - buisness as usual?

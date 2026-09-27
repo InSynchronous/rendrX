@@ -72,5 +72,8 @@ void World::generateMeshes() {
                 }
             }
         }
+
+        // compile to vertecies and push to gpu
+        chunk->uploadTriangles();
     }
 }

@@ -84,16 +84,9 @@ void Scene::loadTextures() {
 
 void Scene::addWorld(World &world) { this->world = &world; }
 
-void Scene::uploadTriangles() {
-    for (auto &[position, chunk] : world->chunks) {
-        chunk->uploadTriangles();
-    }
-}
-
 void Scene::launch() {
     this->init();
     this->loadTextures();
-    this->uploadTriangles();
 }
 
 void Scene::render() {
