@@ -321,3 +321,25 @@ Next steps:
  - enum blocks that have different textures per face
  - infinite chunking
  - terrain generation
+
+## September 26th, 2026
+I want to get infinte chunk loading done today. This means that as the player goes about,
+chunks unload and load.
+
+I implemented a system that allows chunks to have chunk coordinates. I put two chunks 
+together, and got this weird visual issue. Wait, thats prob because the face culling
+between chunks doesn't work. Let me reseach.
+
+### World class?
+I could use a world class that holds all chunks and make everyone use world.get, but
+that would sort of cause issues with unloaded/loaded chunks. Though I was going to make
+a world class anyways. Hmm. Well if chunks are unloaded then its not really an issue really.
+Since they aren't loaded they can't make a weird visual error.
+
+Added a world class, with a block finder, that uses integer division floored to find the
+chunk. It will error if someone tries to reach a block that doesn't exist but who cares.
+
+
+Wait, i'm dumb, my code will of course do that. Uhhhghghghgh. Let me make a patch.
+
+I just check if its out of bounds, if so I just return air.
