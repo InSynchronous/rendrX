@@ -1,44 +1,102 @@
 #include "Chunk.h"
 #include "Atlas.h"
+#include "rendrx/Quad.h"
+#include <algorithm>
+#include <iostream>
 
 using namespace rendrx;
 
-Chunk::Chunk(glm::ivec2 chunkCoord, int seed)
-    : chunkCoord(chunkCoord), seed(seed), noise(seed) {
+Chunk::Chunk(glm::ivec2 chunkCoord, Noise &noise)
+    : chunkCoord(chunkCoord), noise(noise) {
+
+    for (auto &a : blocks)
+        for (auto &b : a)
+            b.fill(Block::AIR);
+
     for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
-            glm::ivec2 worldCoord = (chunkCoord * 16) + glm::ivec2{x, z};
-            float n =
-                noise.perlin({worldCoord.x * 0.05f, worldCoord.y * 0.05f});
-            int height = 8 + static_cast<int>(n * 7.0f);
 
-            for (int y = 0; y < 16; y++) {
-                if (y <= height)
-                    blocks[x][y][z] = Block(glm::vec3{x + chunkCoord.x * 16, y,
-                                                      z + chunkCoord.y * 16},
-                                            getUV(2, 15));
+            glm::ivec2 worldCoord = (chunkCoord * 16) + glm::ivec2{x, z};
+
+            float n = noise.fbm(glm::vec2(worldCoord) * 0.015f, // terrain scale
+                                5,                              // octaves
+                                1.0f,                           // amplitude
+                                1.0f,                           // frequency
+                                2.0f,                           // lacunarity
+                                0.5f                            // persistence
+            );
+
+            int height = 80 + static_cast<int>(n * 35.0f);
+
+            height = std::clamp(height, 1, 255);
+
+            for (int y = 0; y <= height; y++) {
+                blocks[x][y][z] = Block::DIRT;
             }
         }
     }
 
-    // setup buffers
-    glGenVertexArrays(1, &VAO); // 1 triangle/unique VAO
-    glGenBuffers(1, &VBO);      // 1 buffer? still unsure
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
 }
 
 Block &Chunk::getBlock(glm::vec3 position) {
-    static Block airBlock;
+    static Block airBlock = Block::AIR;
 
     // refactor this slop bro
     int x = position.x;
     int y = position.y;
     int z = position.z;
 
-    if (x < 0 || x >= 16 || y < 0 || y >= 16 || z < 0 || z >= 16) {
+    if (x < 0 || x >= 16 || y < 0 || y >= 256 || z < 0 || z >= 16) {
         return airBlock;
     }
 
     return blocks[x][y][z];
+}
+
+void Chunk::addFace(Block type, Face face, glm::vec3 pos) {
+    float s = 0.5f;
+
+    std::pair<glm::vec2, glm::vec2> uv = getUV(3, 15);
+
+    switch (face) {
+    case Face::FRONT:
+        addObject(std::make_unique<Quad>(
+            pos + glm::vec3{-s, -s, +s}, pos + glm::vec3{+s, -s, +s},
+            pos + glm::vec3{+s, +s, +s}, pos + glm::vec3{-s, +s, +s}, uv));
+        break;
+
+    case Face::BACK:
+        addObject(std::make_unique<Quad>(
+            pos + glm::vec3{+s, -s, -s}, pos + glm::vec3{-s, -s, -s},
+            pos + glm::vec3{-s, +s, -s}, pos + glm::vec3{+s, +s, -s}, uv));
+        break;
+
+    case Face::TOP:
+        addObject(std::make_unique<Quad>(
+            pos + glm::vec3{-s, +s, +s}, pos + glm::vec3{+s, +s, +s},
+            pos + glm::vec3{+s, +s, -s}, pos + glm::vec3{-s, +s, -s}, uv));
+        break;
+
+    case Face::BOTTOM:
+        addObject(std::make_unique<Quad>(
+            pos + glm::vec3{-s, -s, -s}, pos + glm::vec3{+s, -s, -s},
+            pos + glm::vec3{+s, -s, +s}, pos + glm::vec3{-s, -s, +s}, uv));
+        break;
+
+    case Face::RIGHT:
+        addObject(std::make_unique<Quad>(
+            pos + glm::vec3{+s, -s, +s}, pos + glm::vec3{+s, -s, -s},
+            pos + glm::vec3{+s, +s, -s}, pos + glm::vec3{+s, +s, +s}, uv));
+        break;
+
+    case Face::LEFT:
+        addObject(std::make_unique<Quad>(
+            pos + glm::vec3{-s, -s, -s}, pos + glm::vec3{-s, -s, +s},
+            pos + glm::vec3{-s, +s, +s}, pos + glm::vec3{-s, +s, -s}, uv));
+        break;
+    }
 }
 
 void Chunk::addObject(std::unique_ptr<Object> o) {
@@ -53,7 +111,7 @@ void Chunk::uploadTriangles() {
         vertices.insert(vertices.end(), v.begin(), v.end());
     }
     objects.clear();
-    vertex_count = vertices.size();
+    vertex_count = vertices.size() / 5; // 5 floats per vertex
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO); // select our vbo

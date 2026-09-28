@@ -17,7 +17,7 @@ class Scene {
     float deltaTime;
     float lastFrame;
 
-    glm::vec3 prevCameraPos = glm::vec3(0.0f, 10.0f, 3.0f);
+    glm::vec3 prevCameraPos = glm::vec3(0.0f, 120.0f, 3.0f);
     glm::vec3 cameraPos = prevCameraPos;
     glm::vec3 cameraRot = glm::vec3(0.0f, 0.0f, 55.0f);
 

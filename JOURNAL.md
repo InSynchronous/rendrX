@@ -468,3 +468,65 @@ course due to the fact I append position by frame not by deltaTime.
 WOW!!!! with delta t its so good. this is actually high fps.
 Let's try to add an fps counter actually. It hovers around 70 fps normally, dropping to 55 at worst
 on 8ms chunk loads. I'd call that a success
+
+### Better terrain gen
+Rn i'm just doing one layer of perlin noise, the better way is to use layers of it called octaves at
+different frequencies. AKA FBM (Fractal brownian motion)
+
+Side Quest: make height 256 possible. Rn its at like 0fps.
+
+Optimization list:
+ - add depth test 
+ - fix vertex shader overcall bug i found
+ - fix the fact each chunk builds its own perm[512] on its own every time
+ - spammy printouts may bottleneck
+
+I got it up to like 20-30 fps on 256 height now. I can make this better by doing the perm[512] thing.
+Its actually 60 fps, but it drops to 30 on chunk creation. My target should be improving chunk creation.
+
+That helped but:
+```
+FPS: 60.6674
+FPS: 59.5038
+FPS: 57.5445
+FPS: 21.5437
+Generated chunk (-8, 10) in 22.3248 ms
+FPS: 43.4409
+Generated chunk (-7, 13) in 41.372 ms
+FPS: 23.7063
+Generated chunk (-6, 15) in 38.8194 ms
+FPS: 25.3304
+Generated chunk (-5, 16) in 23.8186 ms
+FPS: 39.6947
+Generated chunk (-4, 16) in 57.5861 ms
+FPS: 17.0917
+```
+
+It's still really bad. One thing we can do, is consider if Block class is even useful.
+What if instead, we just held an enum stating what kind of block it is? Then, instead
+of storing block coordinates, we'd just have a list of those enums for all 16*256*16 
+blocks of our chunk.
+
+On render, when we do b.getSide, b.getFront, we could instead just generate the block
+on the fly THERE.
+
+I'm going through some intense debugging rn. I can't figure out what I did, but nothing renders now. 0 Clue.
+
+
+I still have 0 clue, I can't figure this out at the moment. It's just not making sense.
+I held down w and span the camera around and i saw flickers of blocks, sometimes a tower.
+Its just so broken, idk why. ive test.
+
+one thing I can think of is the fact that by deffualt before it was air, now its uninstantiated
+in the array. maybe thats something to think about.
+
+YESSS IT WORKED
+OMG
+AND ITS AT LIKE 120 FPS
+OMG
+
+
+FInally1!
+Yea its a day
+gn
+

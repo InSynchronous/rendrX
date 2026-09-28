@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "glad/gl.h"
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <iostream>
@@ -179,7 +180,8 @@ void Scene::render() {
     );
 
     glClearColor(0.1, 0.2, 0.3, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // configure matricies
     glUseProgram(shaderProgram);

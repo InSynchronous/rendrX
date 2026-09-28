@@ -1,5 +1,8 @@
 #include "World.h"
+#include "rendrx/Atlas.h"
+#include "rendrx/Block.h"
 #include "rendrx/Chunk.h"
+#include "rendrx/Quad.h"
 #include <chrono>
 #include <iostream>
 #include <memory>
@@ -21,6 +24,7 @@ void World::loadChunks(glm::ivec2 position, size_t radius) {
                 chunksQueued.find(chunkPos) == chunksQueued.end()) {
                 // only generate if not alr known
                 chunksToLoad.push(chunkPos);
+                chunksQueued.insert(chunkPos);
                 // chunks[chunkPos] = std::make_unique<Chunk>(chunkPos, seed);
             }
         }
@@ -37,7 +41,7 @@ void World::runTasks() {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    chunks[pos] = std::make_unique<Chunk>(pos, seed);
+    chunks[pos] = std::make_unique<Chunk>(pos, noise);
     generateMesh(pos);
     generateMesh(pos + glm::ivec2{1, 0});
     generateMesh(pos + glm::ivec2{-1, 0});
@@ -58,7 +62,7 @@ void World::runAllTasks() {
 
         chunksQueued.erase(pos);
 
-        chunks[pos] = std::make_unique<Chunk>(pos, seed);
+        chunks[pos] = std::make_unique<Chunk>(pos, noise);
         generateMesh(pos);
         generateMesh(pos + glm::ivec2{1, 0});
         generateMesh(pos + glm::ivec2{-1, 0});
@@ -82,7 +86,7 @@ void World::unloadChunks(glm::ivec2 position, size_t radius) {
 }
 
 Block &World::getBlock(glm::vec3 position) {
-    static Block air;
+    static Block air = Block::AIR;
 
     int chunkX = static_cast<int>(std::floor(position.x / 16.0f));
     int chunkZ = static_cast<int>(std::floor(position.z / 16.0f));
@@ -109,32 +113,32 @@ void World::generateMesh(glm::ivec2 position) {
     Chunk *chunk = it->second.get();
 
     for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < 256; j++) {
             for (int k = 0; k < 16; k++) {
                 glm::vec3 worldPos{position.x * 16 + i, j, position.y * 16 + k};
 
                 Block &b = getBlock(worldPos);
 
-                if (b.isAir())
+                if (b == Block::AIR)
                     continue;
 
-                if (getBlock(worldPos + glm::vec3{0, 0, -1}).isAir())
-                    chunk->addObject(b.getBack());
+                if (getBlock(worldPos + glm::vec3{0, 0, -1}) == Block::AIR)
+                    chunk->addFace(b, Face::BACK, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{0, 0, 1}).isAir())
-                    chunk->addObject(b.getFront());
+                if (getBlock(worldPos + glm::vec3{0, 0, 1}) == Block::AIR)
+                    chunk->addFace(b, Face::FRONT, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{0, 1, 0}).isAir())
-                    chunk->addObject(b.getTop());
+                if (getBlock(worldPos + glm::vec3{0, 1, 0}) == Block::AIR)
+                    chunk->addFace(b, Face::TOP, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{0, -1, 0}).isAir())
-                    chunk->addObject(b.getBottom());
+                if (getBlock(worldPos + glm::vec3{0, -1, 0}) == Block::AIR)
+                    chunk->addFace(b, Face::BOTTOM, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{-1, 0, 0}).isAir())
-                    chunk->addObject(b.getLeft());
+                if (getBlock(worldPos + glm::vec3{-1, 0, 0}) == Block::AIR)
+                    chunk->addFace(b, Face::LEFT, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{1, 0, 0}).isAir())
-                    chunk->addObject(b.getRight());
+                if (getBlock(worldPos + glm::vec3{1, 0, 0}) == Block::AIR)
+                    chunk->addFace(b, Face::RIGHT, worldPos);
             }
         }
     }

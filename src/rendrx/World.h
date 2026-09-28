@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Chunk.h"
+#include "rendrx/Noise.h"
 #include <glm/fwd.hpp>
 #include <memory>
 #include <queue>
@@ -25,10 +26,13 @@ class World {
 
     std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash> chunks;
     std::unordered_set<glm::ivec2, IVec2Hash> chunksQueued;
+
+    Noise noise;
+
     friend class Scene;
 
   public:
-    World(int seed) : seed(seed) {};
+    World(int seed) : seed(seed), noise(seed) {};
 
     void loadChunks(glm::ivec2 position, size_t radius);
     void unloadChunks(glm::ivec2 position, size_t radius);

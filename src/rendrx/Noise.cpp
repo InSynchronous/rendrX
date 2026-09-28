@@ -69,3 +69,17 @@ float Noise::perlin(glm::vec2 vec) {
 
     return lerp(nx0, nx1, v);
 }
+
+float Noise::fbm(glm::vec2 position, int octaves, float amplitude,
+                 float frequency, float lacunarity, float persistence) {
+    float value = 0.0f;
+
+    for (int i = 0; i < octaves; i++) {
+        value += perlin(position * frequency) * amplitude;
+
+        frequency *= lacunarity;
+        amplitude *= persistence;
+    }
+
+    return value;
+}

@@ -1,30 +1,8 @@
 #pragma once
 
-#include "rendrx/Quad.h"
 #include <glm/glm.hpp>
-#include <memory>
 
 namespace rendrx {
-class Block {
-  private:
-    bool air = true;
-    std::unique_ptr<Quad> front, back, top, bottom, right, left;
-    std::pair<glm::vec2, glm::vec2> uv;
-
-  public:
-    Block() = default;
-    Block(glm::vec3 pos, std::pair<glm::vec2, glm::vec2> uv)
-        : pos(pos), uv(uv), air(false) {}
-
-    bool isAir() const { return air; }
-
-    std::unique_ptr<Quad> getFront();
-    std::unique_ptr<Quad> getBack();
-    std::unique_ptr<Quad> getTop();
-    std::unique_ptr<Quad> getBottom();
-    std::unique_ptr<Quad> getRight();
-    std::unique_ptr<Quad> getLeft();
-
-    glm::vec3 pos;
-};
+enum class Block { DIRT, AIR };
+enum class Face { FRONT, BACK, LEFT, RIGHT, TOP, BOTTOM };
 } // namespace rendrx
