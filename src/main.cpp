@@ -7,9 +7,9 @@ int main() {
     rendrx::Scene scene;
 
     World world(0);
-    world.loadChunks({0, 0}, 5);
+    world.loadChunks({0, 0}, 8);
 
-    world.generateMeshes(); // preload 5 chunks
+    world.runAllTasks();
 
     scene.addWorld(world);
 
@@ -28,10 +28,11 @@ int main() {
             static_cast<int>(std::floor(pos.z / 16.0f)),
         };
 
+        world.runTasks();
+
         if (prevChunkPos != chunkPos) {
-            world.loadChunks(chunkPos, 5);
-            world.unloadChunks(chunkPos, 5);
-            world.generateMeshes();
+            world.loadChunks(chunkPos, 8);
+            world.unloadChunks(chunkPos, 8);
         }
 
         scene.render();

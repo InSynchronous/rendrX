@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Block.h"
+#include "rendrx/Noise.h"
 #include <array>
 #include <glad/gl.h>
 
@@ -11,10 +12,13 @@ class Chunk {
     std::vector<std::unique_ptr<Object>> objects;
     glm::vec2 chunkCoord; // 1 = 16 blocks
 
+    Noise noise;
+
     unsigned int vertex_count, VAO, VBO;
+    int seed;
 
   public:
-    Chunk(glm::ivec2 chunkCoord);
+    Chunk(glm::ivec2 chunkCoord, int seed);
     ~Chunk() {
         glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);

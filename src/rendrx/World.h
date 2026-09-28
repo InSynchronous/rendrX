@@ -3,12 +3,16 @@
 #include "Chunk.h"
 #include <glm/fwd.hpp>
 #include <memory>
+#include <queue>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace rendrx {
 class World {
   private:
     int seed;
+    std::queue<glm::ivec2> chunksToLoad;
+
     // Custom hash needed for integer vector2
     struct IVec2Hash {
         std::size_t operator()(const glm::ivec2 &v) const {
@@ -20,6 +24,7 @@ class World {
     };
 
     std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash> chunks;
+    std::unordered_set<glm::ivec2, IVec2Hash> chunksQueued;
     friend class Scene;
 
   public:
@@ -27,7 +32,9 @@ class World {
 
     void loadChunks(glm::ivec2 position, size_t radius);
     void unloadChunks(glm::ivec2 position, size_t radius);
-    void generateMeshes();
+    void runTasks();
+    void runAllTasks();
+    void generateMesh(glm::ivec2 position);
     Block &getBlock(glm::vec3 position);
 };
 } // namespace rendrx

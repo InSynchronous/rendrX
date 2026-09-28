@@ -423,3 +423,48 @@ I really do need to brush up on my CPP knowledge and re-read cpp primer again. O
 I added an unloader, that just goes through each chunk, calcualtes tthe disttance from the player, and then
 just checks if thats outside our render distance, if so it errases it. Since its a smart pointer, it
 deallocates it for us!! :)
+
+### World Generation
+I've heard a lot about perlin noise online. Let me see how to use it.
+
+I implemented a perlin noise class pretty easily. I'll shove it into terrain generation next.
+
+I got it all setup, but rn i'm genuinely getting about 20fps at 8 chunks. I don't know who to blame.
+There are many things that can be optimized, perhaps block is too heavy, perhaps my perlin impl. is 
+trash. I don't really know.
+
+Found it. For every block, I instantiate 6 quad objects on the heap. Even though MOST of them, will
+never ever be rendered. Lets just switch it so that they are instantiated when requested for instead.
+
+This made it better, but the entire system still freezes for 0.2 seconds ish on chunk load.
+I could work around this using multithreading, or look for more solutions.
+
+Wait honestly, it isn't that unoptimized or laggy, just i'm blocking the entire game to load chunks.
+
+I originally just added a queue and then, I realized it was laggier than before. That's cuz I kept
+putting items that were already in the queue in the queue again, because the worker didn't get there.
+
+turns out it was working great? it seems to be 
+`// world.generateMeshes();`
+
+Commenting it out made frreezing stop, and chunks load in under a milisecond each.
+```
+Initializing
+Generated chunk (-8, 1) in 0.977291 ms
+Generated chunk (-7, 4) in 1.06209 ms
+Generated chunk (-6, 6) in 0.54539 ms
+Generated chunk (-5, 7) in 0.420052 ms
+Generated chunk (-4, 7) in 0.435926 ms
+Generated chunk (-3, 8) in 0.498631 ms
+```
+
+Lets see generateMeshes. Ah. It regenerates meshes OF ALL CHUNKS. no matter if they didn't change.
+Let's just make it generate chunk by chunk instead.
+
+This is much better, though now the W key makes you go slower when chunks are loading. This is of
+course due to the fact I append position by frame not by deltaTime.
+
+
+WOW!!!! with delta t its so good. this is actually high fps.
+Let's try to add an fps counter actually. It hovers around 70 fps normally, dropping to 55 at worst
+on 8ms chunk loads. I'd call that a success

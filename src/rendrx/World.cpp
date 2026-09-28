@@ -1,5 +1,7 @@
 #include "World.h"
 #include "rendrx/Chunk.h"
+#include <chrono>
+#include <iostream>
 #include <memory>
 
 using namespace rendrx;
@@ -15,11 +17,53 @@ void World::loadChunks(glm::ivec2 position, size_t radius) {
             glm::ivec2 chunkPos = position + glm::ivec2{x, y};
 
             auto it = chunks.find(chunkPos);
-            if (it == chunks.end()) {
+            if (it == chunks.end() &&
+                chunksQueued.find(chunkPos) == chunksQueued.end()) {
                 // only generate if not alr known
-                chunks[chunkPos] = std::make_unique<Chunk>(chunkPos);
+                chunksToLoad.push(chunkPos);
+                // chunks[chunkPos] = std::make_unique<Chunk>(chunkPos, seed);
             }
         }
+    }
+}
+
+void World::runTasks() {
+    if (chunksToLoad.empty())
+        return;
+
+    glm::ivec2 pos = chunksToLoad.front();
+    chunksToLoad.pop();
+    chunksQueued.erase(pos);
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    chunks[pos] = std::make_unique<Chunk>(pos, seed);
+    generateMesh(pos);
+    generateMesh(pos + glm::ivec2{1, 0});
+    generateMesh(pos + glm::ivec2{-1, 0});
+    generateMesh(pos + glm::ivec2{0, 1});
+    generateMesh(pos + glm::ivec2{0, -1});
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::cout << "Generated chunk (" << pos.x << ", " << pos.y << ") in "
+              << std::chrono::duration<double, std::milli>(end - start).count()
+              << " ms\n";
+}
+
+void World::runAllTasks() {
+    while (!chunksToLoad.empty()) {
+        glm::ivec2 pos = chunksToLoad.front();
+        chunksToLoad.pop();
+
+        chunksQueued.erase(pos);
+
+        chunks[pos] = std::make_unique<Chunk>(pos, seed);
+        generateMesh(pos);
+        generateMesh(pos + glm::ivec2{1, 0});
+        generateMesh(pos + glm::ivec2{-1, 0});
+        generateMesh(pos + glm::ivec2{0, 1});
+        generateMesh(pos + glm::ivec2{0, -1});
     }
 }
 
@@ -56,42 +100,44 @@ Block &World::getBlock(glm::vec3 position) {
         {localX, static_cast<int>(std::floor(position.y)), localZ});
 }
 
-void World::generateMeshes() {
-    for (auto &[position, chunk] : chunks) {
-        for (int i = 0; i < 16; i++) {
-            for (int j = 0; j < 16; j++) {
-                for (int k = 0; k < 16; k++) {
-                    glm::vec3 worldPos{position.x * 16 + i, j,
-                                       position.y * 16 + k};
+void World::generateMesh(glm::ivec2 position) {
+    auto it = chunks.find(position);
 
-                    Block &b = getBlock(worldPos);
+    if (it == chunks.end())
+        return;
 
-                    if (b.isAir()) {
-                        continue;
-                    }
+    Chunk *chunk = it->second.get();
 
-                    if (getBlock(worldPos + glm::vec3{0, 0, -1}).isAir())
-                        chunk->addObject(b.getBack());
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            for (int k = 0; k < 16; k++) {
+                glm::vec3 worldPos{position.x * 16 + i, j, position.y * 16 + k};
 
-                    if (getBlock(worldPos + glm::vec3{0, 0, 1}).isAir())
-                        chunk->addObject(b.getFront());
+                Block &b = getBlock(worldPos);
 
-                    if (getBlock(worldPos + glm::vec3{0, 1, 0}).isAir())
-                        chunk->addObject(b.getTop());
+                if (b.isAir())
+                    continue;
 
-                    if (getBlock(worldPos + glm::vec3{0, -1, 0}).isAir())
-                        chunk->addObject(b.getBottom());
+                if (getBlock(worldPos + glm::vec3{0, 0, -1}).isAir())
+                    chunk->addObject(b.getBack());
 
-                    if (getBlock(worldPos + glm::vec3{-1, 0, 0}).isAir())
-                        chunk->addObject(b.getLeft());
+                if (getBlock(worldPos + glm::vec3{0, 0, 1}).isAir())
+                    chunk->addObject(b.getFront());
 
-                    if (getBlock(worldPos + glm::vec3{1, 0, 0}).isAir())
-                        chunk->addObject(b.getRight());
-                }
+                if (getBlock(worldPos + glm::vec3{0, 1, 0}).isAir())
+                    chunk->addObject(b.getTop());
+
+                if (getBlock(worldPos + glm::vec3{0, -1, 0}).isAir())
+                    chunk->addObject(b.getBottom());
+
+                if (getBlock(worldPos + glm::vec3{-1, 0, 0}).isAir())
+                    chunk->addObject(b.getLeft());
+
+                if (getBlock(worldPos + glm::vec3{1, 0, 0}).isAir())
+                    chunk->addObject(b.getRight());
             }
         }
-
-        // compile to vertecies and push to gpu
-        chunk->uploadTriangles();
     }
+
+    chunk->uploadTriangles();
 }

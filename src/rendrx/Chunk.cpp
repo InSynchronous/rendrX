@@ -1,13 +1,23 @@
 #include "Chunk.h"
 #include "Atlas.h"
+
 using namespace rendrx;
 
-Chunk::Chunk(glm::ivec2 chunkCoord) : chunkCoord(chunkCoord) {
+Chunk::Chunk(glm::ivec2 chunkCoord, int seed)
+    : chunkCoord(chunkCoord), seed(seed), noise(seed) {
     for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
-            blocks[x][0][z] = Block(
-                glm::vec3{x + chunkCoord.x * 16, 0, z + chunkCoord.y * 16},
-                getUV(2, 15));
+            glm::ivec2 worldCoord = (chunkCoord * 16) + glm::ivec2{x, z};
+            float n =
+                noise.perlin({worldCoord.x * 0.05f, worldCoord.y * 0.05f});
+            int height = 8 + static_cast<int>(n * 7.0f);
+
+            for (int y = 0; y < 16; y++) {
+                if (y <= height)
+                    blocks[x][y][z] = Block(glm::vec3{x + chunkCoord.x * 16, y,
+                                                      z + chunkCoord.y * 16},
+                                            getUV(2, 15));
+            }
         }
     }
 

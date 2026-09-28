@@ -1,8 +1,8 @@
 #include "Scene.h"
 #include <GLFW/glfw3.h>
+#include <chrono>
 #include <iostream>
 #include <memory>
-#include <vector>
 
 using namespace rendrx;
 
@@ -85,12 +85,16 @@ void Scene::loadTextures() {
 void Scene::addWorld(World &world) { this->world = &world; }
 
 void Scene::launch() {
+    lastFrame = glfwGetTime();
     this->init();
     this->loadTextures();
 }
 
 void Scene::render() {
-    float time = glfwGetTime();
+    float currentTime = glfwGetTime();
+    float deltaTime = currentTime - lastFrame;
+    lastFrame = currentTime;
+    std::cout << "FPS: " << 1 / deltaTime << std::endl;
 
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
         cameraRot.z -= 1.0f;
@@ -125,30 +129,31 @@ void Scene::render() {
         glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 
     prevCameraPos = cameraPos;
-    float speed = 0.1f;
+    float speed = 20.0f;
+    float movement = speed * deltaTime;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cameraPos += forward * speed;
+        cameraPos += forward * movement;
     }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cameraPos -= forward * speed;
+        cameraPos -= forward * movement;
     }
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cameraPos -= right * speed;
+        cameraPos -= right * movement;
     }
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cameraPos += right * speed;
+        cameraPos += right * movement;
     }
 
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        cameraPos.y += speed;
+        cameraPos.y += movement;
     }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        cameraPos.y -= speed;
+        cameraPos.y -= movement;
     }
 
     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
