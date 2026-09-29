@@ -49,8 +49,6 @@ void World::generationLoop() {
                 return;
 
             pos = chunksToLoad.front();
-            chunksToLoad.pop();
-            chunksQueued.erase(pos);
         }
 
         auto start = std::chrono::high_resolution_clock::now();
@@ -59,6 +57,11 @@ void World::generationLoop() {
 
         generateMeshCPU(pos);
 
+        {
+            std::unique_lock lock(queueMutex);
+            chunksToLoad.pop();
+            chunksQueued.erase(pos);
+        }
         {
             std::lock_guard lock(finishedMutex);
             chunksFinished.push(pos);

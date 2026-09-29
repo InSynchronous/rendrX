@@ -565,6 +565,11 @@ I got it to work, but nothing shows up. chunk gen is working though. This mutex 
 I think I see the issue, its because chunk instantiation, results in the creation of a VAO/VBO.
 If i do this on a thread, where there is no opengl context, it does nothing. One idea is to just
 move creation outside? Uhhh well, that's interesting to say the least lol. It works, but its glitchy?
+
+### sike
+I think its because im popping it from queue before generation, causing requeueing
+i fixed it, it doesn't freezze no more. still prob unsafe and sucks on higher terrrain gen loads.
+gotta figure ts out eventually
 At times its verry fast, but then it freezes up?
 I have not much knowledge on thread safety. Gn
 
