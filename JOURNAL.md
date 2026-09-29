@@ -542,3 +542,8 @@ Its working quite well. Let me add more blocks now based on the texture atlas. B
 It works fine. I also noticed the texture image i used has no top grass block lol.
 This is fine for now, I just used green wool. Other issues: textures don't look good?
 I don't really know how that could be but, I can just try using a higher quality atlas.
+
+Yea that's not happening. Lets try something else more useful like getting stone and dirt
+heights configured.
+
+That looks not that good, but its good enough for now. 

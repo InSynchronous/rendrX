@@ -3,6 +3,7 @@
 #include "rendrx/Block.h"
 #include "rendrx/Quad.h"
 #include <algorithm>
+#include <iostream>
 
 using namespace rendrx;
 
@@ -31,7 +32,13 @@ Chunk::Chunk(glm::ivec2 chunkCoord, Noise &noise)
             height = std::clamp(height, 1, 255);
 
             for (int y = 0; y <= height; y++) {
-                blocks[x][y][z] = Block::GRASS;
+                if (y > 80)
+                    blocks[x][y][z] = Block::DIRT;
+                else
+                    blocks[x][y][z] = Block::STONE;
+
+                if (y == height)
+                    blocks[x][y][z] = Block::GRASS;
             }
         }
     }
