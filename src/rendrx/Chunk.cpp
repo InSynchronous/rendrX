@@ -42,7 +42,9 @@ Chunk::Chunk(glm::ivec2 chunkCoord, Noise &noise)
             }
         }
     }
+}
 
+void Chunk::init() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 }

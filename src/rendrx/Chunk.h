@@ -31,5 +31,6 @@ class Chunk {
     void uploadTriangles();
     void addObject(std::unique_ptr<Object> o);
     void draw();
+    void init();
 };
 } // namespace rendrx

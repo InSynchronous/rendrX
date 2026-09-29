@@ -547,3 +547,24 @@ Yea that's not happening. Lets try something else more useful like getting stone
 heights configured.
 
 That looks not that good, but its good enough for now. 
+
+### Multithreaded Chunking
+I need to add a way so that other threads can deal with chunks. I don't know much, but
+I think one other thread is fine.
+
+I was using a system with mutex's and chunks, but now I realize I need like one thread.
+There goes all my work. Oops.
+
+
+Hit a roadblock. If a thread runs generateMesh(pos);, it also uploads chunks to opengl, in a thread.
+this is not allowed since thread doesn't have opengl context. What if insetad i just don't upload..
+Then I can use the main thread to upload instead. Should be fine.
+
+I got it to work, but nothing shows up. chunk gen is working though. This mutex stuff is hard.
+
+I think I see the issue, its because chunk instantiation, results in the creation of a VAO/VBO.
+If i do this on a thread, where there is no opengl context, it does nothing. One idea is to just
+move creation outside? Uhhh well, that's interesting to say the least lol. It works, but its glitchy?
+At times its verry fast, but then it freezes up?
+I have not much knowledge on thread safety. Gn
+

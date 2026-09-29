@@ -9,7 +9,7 @@ int main() {
     World world(0);
     world.loadChunks({0, 0}, 8);
 
-    world.runAllTasks();
+    // world.runAllTasks();
 
     scene.addWorld(world);
 
