@@ -1,8 +1,8 @@
 #include "Chunk.h"
 #include "Atlas.h"
+#include "rendrx/Block.h"
 #include "rendrx/Quad.h"
 #include <algorithm>
-#include <iostream>
 
 using namespace rendrx;
 
@@ -31,7 +31,7 @@ Chunk::Chunk(glm::ivec2 chunkCoord, Noise &noise)
             height = std::clamp(height, 1, 255);
 
             for (int y = 0; y <= height; y++) {
-                blocks[x][y][z] = Block::DIRT;
+                blocks[x][y][z] = Block::GRASS;
             }
         }
     }
@@ -58,7 +58,7 @@ Block &Chunk::getBlock(glm::vec3 position) {
 void Chunk::addFace(Block type, Face face, glm::vec3 pos) {
     float s = 0.5f;
 
-    std::pair<glm::vec2, glm::vec2> uv = getUV(3, 15);
+    UV uv = blockToUV[static_cast<int>(type)][static_cast<int>(face)];
 
     switch (face) {
     case Face::FRONT:

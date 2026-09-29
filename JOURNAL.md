@@ -530,3 +530,15 @@ FInally1!
 Yea its a day
 gn
 
+
+## September 28th, 2026
+I want to implement some overall fixes. Rn blocks are just one face, so let's solve this with a 
+constexpr 2D array between Blocks+faces to a uv pair. I realize now how inefficient some aspects
+of this codebase is. Like why on earth is getUV a glm::vec2 function. Its literally taking in 
+2 unsigned integers, that will never be greater than 256. uint_8 is a better tool
+
+Its working quite well. Let me add more blocks now based on the texture atlas. Brb.
+
+It works fine. I also noticed the texture image i used has no top grass block lol.
+This is fine for now, I just used green wool. Other issues: textures don't look good?
+I don't really know how that could be but, I can just try using a higher quality atlas.

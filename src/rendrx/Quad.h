@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Object.h"
+#include "rendrx/Atlas.h"
 #include <glm/glm.hpp>
 #include <utility>
 #include <vector>
@@ -9,11 +10,10 @@ namespace rendrx {
 
 class Quad : public Object {
   public:
-    Quad(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4,
-         std::pair<glm::vec2, glm::vec2> uv)
-        : p1(p1), p2(p2), p3(p3), p4(p4), u1(uv.first.x, uv.first.y),
-          u2(uv.second.x, uv.first.y), u3(uv.second.x, uv.second.y),
-          u4(uv.first.x, uv.second.y) {}
+    Quad(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4, UV uv)
+        : p1(p1), p2(p2), p3(p3), p4(p4), u1(uv.min.x, uv.min.y),
+          u2(uv.min.x, uv.min.y), u3(uv.max.x, uv.max.y),
+          u4(uv.min.x, uv.max.y) {}
 
     Quad(glm::vec3 p1, glm::vec2 u1, glm::vec3 p2, glm::vec2 u2, glm::vec3 p3,
          glm::vec2 u3, glm::vec3 p4, glm::vec2 u4)
