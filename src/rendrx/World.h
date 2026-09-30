@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Chunk.h"
+#include "rendrx/Generation.h"
 #include "rendrx/Noise.h"
 #include <condition_variable>
 #include <glm/fwd.hpp>
@@ -15,13 +16,6 @@ namespace rendrx {
 class World {
   private:
     int seed;
-    std::queue<glm::ivec2> chunksToLoad;
-    std::queue<glm::ivec2> chunksFinished;
-    std::mutex queueMutex;
-    std::mutex finishedMutex;
-    std::condition_variable queueCV;
-    std::thread generationThread;
-    bool running = true;
 
     // Custom hash needed for integer vector2
     struct IVec2Hash {
@@ -32,19 +26,28 @@ class World {
             return h1 ^ (h2 << 1);
         }
     };
-
-    std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash> chunks;
     std::unordered_set<glm::ivec2, IVec2Hash> chunksQueued;
+    std::queue<glm::ivec2> chunksToLoad;
+    std::queue<std::unique_ptr<Chunk>> chunksFinished;
+    std::mutex queueMutex;
+    std::mutex finishedMutex;
+    std::condition_variable queueCV;
+    std::vector<std::thread> generationThreads;
+    bool running = true;
 
-    Noise noise;
+    std::mutex chunksMutex;
+    std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash> chunks;
+
+    Generation generation;
 
     void generationLoop();
 
     friend class Scene;
 
   public:
-    World(int seed) : seed(seed), noise(seed) {
-        generationThread = std::thread(&World::generationLoop, this);
+    World(int seed) : seed(seed), generation(seed) {
+        generationThreads.push_back(std::thread(&World::generationLoop, this));
+        generationThreads.push_back(std::thread(&World::generationLoop, this));
     }
 
     ~World() {
@@ -55,8 +58,10 @@ class World {
 
         queueCV.notify_one();
 
-        if (generationThread.joinable())
-            generationThread.join();
+        for (auto &generationThread : generationThreads) {
+            if (generationThread.joinable())
+                generationThread.join();
+        }
     }
 
     void loadChunks(glm::ivec2 position, size_t radius);
@@ -64,7 +69,8 @@ class World {
     void runTasks();
     void runAllTasks();
     void generateMesh(glm::ivec2 position);
-    void generateMeshCPU(glm::ivec2 position);
-    Block &getBlock(glm::vec3 position);
+    void generateMeshCPU(std::unique_ptr<Chunk> &chunk);
+    Block getBlock(glm::vec3 position);
+    Block getBlockCPU(Chunk &chunk, glm::vec3 position);
 };
 } // namespace rendrx

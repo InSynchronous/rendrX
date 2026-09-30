@@ -573,3 +573,36 @@ gotta figure ts out eventually
 At times its verry fast, but then it freezes up?
 I have not much knowledge on thread safety. Gn
 
+## September 29th, 2026
+Watched some videos on mutex's and thread locks. The plan as is as such:
+
+If pos not in chunks, and its not in chunksQueued:
+    push to buildQueue
+    push to chunksQueued
+
+Worker thread:
+    pop from buildQueue
+    generate
+    push to finishedQueue
+    pop from chunksQueued
+
+I got this by simply changing some things. Now time to see if it can handle a million threads.
+The game randomly freezes and locks up. Idk why
+
+I think I know why. Its cuz I instantiate chunk in place with chunk[pos] every time. This is
+dangerous. I don't want to use a mutex either because that's also not smart to lock everyone
+out of an important array.
+
+I ended up changing the system so that it pushes chunks to a finished queue before its then 
+pushed to the chunks in the main thread, thinking that would make it thread safe.
+Well turns out pushing and removing data from an unordered map, while the thread is using
+get_block, which reads from the unordered map using find, leads to segfaults. This is kinda
+stupid though, since the majority of the calls for getBlock literally go to read blocks
+IN ITS OWN CHUNK. Let me bring back chunk.getBlock.
+
+Lets actually start by abstracting world generation code away from just chunk.
+Ok that took a bit too long, but now I should be able to do a block gen from
+the literal worker thread.
+
+Ok. It works great now. Only issue is that there is a block of void between chunks.
+Need to debug this.

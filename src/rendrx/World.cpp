@@ -49,22 +49,22 @@ void World::generationLoop() {
                 return;
 
             pos = chunksToLoad.front();
+            chunksToLoad.pop();
         }
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        chunks[pos] = std::make_unique<Chunk>(pos, noise);
+        auto temp = std::make_unique<Chunk>(pos, generation);
 
-        generateMeshCPU(pos);
+        generateMeshCPU(temp);
 
         {
             std::unique_lock lock(queueMutex);
-            chunksToLoad.pop();
             chunksQueued.erase(pos);
         }
         {
             std::lock_guard lock(finishedMutex);
-            chunksFinished.push(pos);
+            chunksFinished.push(std::move(temp));
         }
 
         auto end = std::chrono::high_resolution_clock::now();
@@ -78,7 +78,7 @@ void World::generationLoop() {
 
 void World::runTasks() {
     // Load chunksFinished to finished local copy
-    std::queue<glm::ivec2> finished;
+    std::queue<std::unique_ptr<Chunk>> finished;
 
     {
         std::lock_guard lock(finishedMutex);
@@ -86,13 +86,15 @@ void World::runTasks() {
     }
 
     while (!finished.empty()) {
-        glm::ivec2 pos = finished.front();
+        auto chunk = std::move(finished.front());
         finished.pop();
 
-        auto it = chunks.find(pos);
-        if (it != chunks.end()) {
-            it->second->init();
-            it->second->uploadTriangles(); // upload
+        chunk->init();
+        chunk->uploadTriangles(); // upload
+
+        {
+            std::lock_guard lock(chunksMutex);
+            chunks[chunk->chunkCoord] = std::move(chunk);
         }
     }
 }
@@ -104,7 +106,7 @@ void World::runAllTasks() {
 
         chunksQueued.erase(pos);
 
-        chunks[pos] = std::make_unique<Chunk>(pos, noise);
+        chunks[pos] = std::make_unique<Chunk>(pos, generation);
         generateMesh(pos);
         generateMesh(pos + glm::ivec2{1, 0});
         generateMesh(pos + glm::ivec2{-1, 0});
@@ -127,7 +129,7 @@ void World::unloadChunks(glm::ivec2 position, size_t radius) {
     }
 }
 
-Block &World::getBlock(glm::vec3 position) {
+Block World::getBlock(glm::vec3 position) {
     static Block air = Block::AIR;
 
     int chunkX = static_cast<int>(std::floor(position.x / 16.0f));
@@ -136,14 +138,34 @@ Block &World::getBlock(glm::vec3 position) {
     int localX = static_cast<int>(std::floor(position.x)) - chunkX * 16;
     int localZ = static_cast<int>(std::floor(position.z)) - chunkZ * 16;
 
-    auto it = chunks.find({chunkX, chunkZ});
+    {
+        std::lock_guard lock(chunksMutex);
+        auto it = chunks.find({chunkX, chunkZ});
+        if (it == chunks.end()) {
+            return air;
+        }
 
-    if (it == chunks.end()) {
-        return air;
+        return it->second->getBlock(
+            {localX, static_cast<int>(std::floor(position.y)), localZ});
+    }
+}
+
+Block World::getBlockCPU(Chunk &chunk, glm::vec3 position) {
+    auto x = position.x;
+    auto y = position.y;
+    auto z = position.z;
+
+    if (y < 0 || y >= 256)
+        return Block::AIR;
+
+    if (x >= 0 && x < 16 && z >= 0 && z < 16) {
+        return chunk.getBlock({x, y, z});
     }
 
-    return it->second->getBlock(
-        {localX, static_cast<int>(std::floor(position.y)), localZ});
+    glm::ivec3 worldPos{chunk.chunkCoord.x * 16 + x, y,
+                        chunk.chunkCoord.y * 16 + z};
+
+    return generation.getBlock(worldPos);
 }
 
 void World::generateMesh(glm::ivec2 position) {
@@ -159,7 +181,7 @@ void World::generateMesh(glm::ivec2 position) {
             for (int k = 0; k < 16; k++) {
                 glm::vec3 worldPos{position.x * 16 + i, j, position.y * 16 + k};
 
-                Block &b = getBlock(worldPos);
+                Block b = getBlock(worldPos);
 
                 if (b == Block::AIR)
                     continue;
@@ -188,40 +210,43 @@ void World::generateMesh(glm::ivec2 position) {
     chunk->uploadTriangles();
 }
 
-void World::generateMeshCPU(glm::ivec2 position) {
-    auto it = chunks.find(position);
-
-    if (it == chunks.end())
-        return;
-
-    Chunk *chunk = it->second.get();
+void World::generateMeshCPU(std::unique_ptr<Chunk> &chunk) {
+    auto position = chunk->chunkCoord;
 
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 256; j++) {
             for (int k = 0; k < 16; k++) {
                 glm::vec3 worldPos{position.x * 16 + i, j, position.y * 16 + k};
 
-                Block &b = getBlock(worldPos);
+                glm::vec3 localPos{i, j, k};
+
+                Block b = getBlockCPU(*chunk, localPos);
 
                 if (b == Block::AIR)
                     continue;
 
-                if (getBlock(worldPos + glm::vec3{0, 0, -1}) == Block::AIR)
+                if (getBlockCPU(*chunk, localPos + glm::vec3{0, 0, -1}) ==
+                    Block::AIR)
                     chunk->addFace(b, Face::BACK, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{0, 0, 1}) == Block::AIR)
+                if (getBlockCPU(*chunk, localPos + glm::vec3{0, 0, 1}) ==
+                    Block::AIR)
                     chunk->addFace(b, Face::FRONT, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{0, 1, 0}) == Block::AIR)
+                if (getBlockCPU(*chunk, localPos + glm::vec3{0, 1, 0}) ==
+                    Block::AIR)
                     chunk->addFace(b, Face::TOP, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{0, -1, 0}) == Block::AIR)
+                if (getBlockCPU(*chunk, localPos + glm::vec3{0, -1, 0}) ==
+                    Block::AIR)
                     chunk->addFace(b, Face::BOTTOM, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{-1, 0, 0}) == Block::AIR)
+                if (getBlockCPU(*chunk, localPos + glm::vec3{-1, 0, 0}) ==
+                    Block::AIR)
                     chunk->addFace(b, Face::LEFT, worldPos);
 
-                if (getBlock(worldPos + glm::vec3{1, 0, 0}) == Block::AIR)
+                if (getBlockCPU(*chunk, localPos + glm::vec3{1, 0, 0}) ==
+                    Block::AIR)
                     chunk->addFace(b, Face::RIGHT, worldPos);
             }
         }

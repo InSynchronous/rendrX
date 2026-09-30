@@ -7,8 +7,8 @@
 
 using namespace rendrx;
 
-Chunk::Chunk(glm::ivec2 chunkCoord, Noise &noise)
-    : chunkCoord(chunkCoord), noise(noise) {
+Chunk::Chunk(glm::ivec2 chunkCoord, Generation &generation)
+    : chunkCoord(chunkCoord), generation(generation) {
 
     for (auto &a : blocks)
         for (auto &b : a)
@@ -17,28 +17,10 @@ Chunk::Chunk(glm::ivec2 chunkCoord, Noise &noise)
     for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
 
-            glm::ivec2 worldCoord = (chunkCoord * 16) + glm::ivec2{x, z};
-
-            float n = noise.fbm(glm::vec2(worldCoord) * 0.015f, // terrain scale
-                                5,                              // octaves
-                                1.0f,                           // amplitude
-                                1.0f,                           // frequency
-                                2.0f,                           // lacunarity
-                                0.5f                            // persistence
-            );
-
-            int height = 80 + static_cast<int>(n * 35.0f);
-
-            height = std::clamp(height, 1, 255);
-
-            for (int y = 0; y <= height; y++) {
-                if (y > 80)
-                    blocks[x][y][z] = Block::DIRT;
-                else
-                    blocks[x][y][z] = Block::STONE;
-
-                if (y == height)
-                    blocks[x][y][z] = Block::GRASS;
+            glm::vec2 worldCoord = (chunkCoord * 16) + glm::ivec2{x, z};
+            auto height = generation.getHeight(worldCoord);
+            for (int y = 0; y < height; y++) {
+                blocks[x][y][z] = generation.getBlock(y, height);
             }
         }
     }
@@ -49,7 +31,7 @@ void Chunk::init() {
     glGenBuffers(1, &VBO);
 }
 
-Block &Chunk::getBlock(glm::vec3 position) {
+Block Chunk::getBlock(glm::vec3 position) {
     static Block airBlock = Block::AIR;
 
     // refactor this slop bro
