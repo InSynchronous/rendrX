@@ -19,7 +19,7 @@ Chunk::Chunk(glm::ivec2 chunkCoord, Generation &generation)
 
             glm::vec2 worldCoord = (chunkCoord * 16) + glm::ivec2{x, z};
             auto height = generation.getHeight(worldCoord);
-            for (int y = 0; y < height; y++) {
+            for (int y = 0; y <= height; y++) {
                 blocks[x][y][z] = generation.getBlock(y, height);
             }
         }

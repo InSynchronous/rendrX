@@ -150,7 +150,7 @@ Block World::getBlock(glm::vec3 position) {
     }
 }
 
-Block World::getBlockCPU(Chunk &chunk, glm::vec3 position) {
+Block World::getBlockCPU(Chunk &chunk, glm::ivec3 position) {
     auto x = position.x;
     auto y = position.y;
     auto z = position.z;
@@ -218,34 +218,34 @@ void World::generateMeshCPU(std::unique_ptr<Chunk> &chunk) {
             for (int k = 0; k < 16; k++) {
                 glm::vec3 worldPos{position.x * 16 + i, j, position.y * 16 + k};
 
-                glm::vec3 localPos{i, j, k};
+                glm::ivec3 localPos{i, j, k};
 
                 Block b = getBlockCPU(*chunk, localPos);
 
                 if (b == Block::AIR)
                     continue;
 
-                if (getBlockCPU(*chunk, localPos + glm::vec3{0, 0, -1}) ==
+                if (getBlockCPU(*chunk, localPos + glm::ivec3{0, 0, -1}) ==
                     Block::AIR)
                     chunk->addFace(b, Face::BACK, worldPos);
 
-                if (getBlockCPU(*chunk, localPos + glm::vec3{0, 0, 1}) ==
+                if (getBlockCPU(*chunk, localPos + glm::ivec3{0, 0, 1}) ==
                     Block::AIR)
                     chunk->addFace(b, Face::FRONT, worldPos);
 
-                if (getBlockCPU(*chunk, localPos + glm::vec3{0, 1, 0}) ==
+                if (getBlockCPU(*chunk, localPos + glm::ivec3{0, 1, 0}) ==
                     Block::AIR)
                     chunk->addFace(b, Face::TOP, worldPos);
 
-                if (getBlockCPU(*chunk, localPos + glm::vec3{0, -1, 0}) ==
+                if (getBlockCPU(*chunk, localPos + glm::ivec3{0, -1, 0}) ==
                     Block::AIR)
                     chunk->addFace(b, Face::BOTTOM, worldPos);
 
-                if (getBlockCPU(*chunk, localPos + glm::vec3{-1, 0, 0}) ==
+                if (getBlockCPU(*chunk, localPos + glm::ivec3{-1, 0, 0}) ==
                     Block::AIR)
                     chunk->addFace(b, Face::LEFT, worldPos);
 
-                if (getBlockCPU(*chunk, localPos + glm::vec3{1, 0, 0}) ==
+                if (getBlockCPU(*chunk, localPos + glm::ivec3{1, 0, 0}) ==
                     Block::AIR)
                     chunk->addFace(b, Face::RIGHT, worldPos);
             }

@@ -605,4 +605,7 @@ Ok that took a bit too long, but now I should be able to do a block gen from
 the literal worker thread.
 
 Ok. It works great now. Only issue is that there is a block of void between chunks.
-Need to debug this.
+
+Not a block of void, but just missing faces in general. let me investigate.
+Need to debug this. found it. its because i changed a y <= to a y< in the latest version.
+fixed.

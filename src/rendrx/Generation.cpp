@@ -18,23 +18,22 @@ float Generation::getHeight(glm::vec2 xy) {
     return std::clamp(height, 1, 255);
 }
 
+Block Generation::getBlock(float y, float h) {
+    if (y > h)
+        return Block::AIR;
+
+    if (y == h)
+        return Block::GRASS;
+
+    if (y > 80)
+        return Block::DIRT;
+
+    return Block::STONE;
+}
+
 Block Generation::getBlock(glm::vec3 xyz) {
     auto h = getHeight({xyz.x, xyz.z});
     auto y = xyz.y;
 
-    if (y == h)
-        return Block::GRASS;
-    if (y > 80)
-        return Block::DIRT;
-    else
-        return Block::STONE;
-}
-
-Block Generation::getBlock(float y, float h) {
-    if (y == h)
-        return Block::GRASS;
-    if (y > 80)
-        return Block::DIRT;
-    else
-        return Block::STONE;
+    return getBlock(y, h);
 }

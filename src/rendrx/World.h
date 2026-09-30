@@ -56,7 +56,7 @@ class World {
             running = false;
         }
 
-        queueCV.notify_one();
+        queueCV.notify_all();
 
         for (auto &generationThread : generationThreads) {
             if (generationThread.joinable())
@@ -71,6 +71,6 @@ class World {
     void generateMesh(glm::ivec2 position);
     void generateMeshCPU(std::unique_ptr<Chunk> &chunk);
     Block getBlock(glm::vec3 position);
-    Block getBlockCPU(Chunk &chunk, glm::vec3 position);
+    Block getBlockCPU(Chunk &chunk, glm::ivec3 position);
 };
 } // namespace rendrx
