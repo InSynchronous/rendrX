@@ -7,7 +7,7 @@ int main() {
     rendrx::Scene scene;
 
     World world(0);
-    world.loadChunks({0, 0}, 8);
+    world.loadChunks({0, 0}, 12);
 
     // world.runAllTasks();
 
@@ -31,8 +31,8 @@ int main() {
         world.runTasks();
 
         if (prevChunkPos != chunkPos) {
-            world.loadChunks(chunkPos, 8);
-            world.unloadChunks(chunkPos, 8);
+            world.loadChunks(chunkPos, 12);
+            world.unloadChunks(chunkPos, 12);
         }
 
         scene.render();
