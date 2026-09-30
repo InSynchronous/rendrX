@@ -609,3 +609,14 @@ Ok. It works great now. Only issue is that there is a block of void between chun
 Not a block of void, but just missing faces in general. let me investigate.
 Need to debug this. found it. its because i changed a y <= to a y< in the latest version.
 fixed.
+
+I tried some stuff out, added a sand block, but am still unsure where to go with this terrain generation.
+Perhaps something better to do with my time would be to well, focus on what's more important:
+ - MOAR RENDER DISTANCE
+
+I want to have insane render distance, like those achieved with mods like Distant Horizons in minecraft, using
+LOD chunks, level of detail.
+
+Firstly though, the textures look TRASH. Let me see why. Found the issue in Quad.cpp. I had my UV coordinates wrong.
+Whoops! Also, I searched online about opengl smoothing/blurring low quality textures, and turns out that was an easy fix
+too.

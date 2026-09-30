@@ -46,8 +46,10 @@ class World {
 
   public:
     World(int seed) : seed(seed), generation(seed) {
-        generationThreads.push_back(std::thread(&World::generationLoop, this));
-        generationThreads.push_back(std::thread(&World::generationLoop, this));
+        unsigned int core_count = std::thread::hardware_concurrency();
+        for (auto i = 0; i < core_count; i++)
+            generationThreads.push_back(
+                std::thread(&World::generationLoop, this));
     }
 
     ~World() {

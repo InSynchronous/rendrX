@@ -22,10 +22,19 @@ Block Generation::getBlock(float y, float h) {
     if (y > h)
         return Block::AIR;
 
-    if (y == h)
+    float depth = h - y;
+
+    if (h < 65.0f) {
+        if (depth < 5.0f)
+            return Block::SAND;
+
+        return Block::STONE;
+    }
+
+    if (depth < 1.0f)
         return Block::GRASS;
 
-    if (y > 80)
+    if (depth < 4.0f)
         return Block::DIRT;
 
     return Block::STONE;
