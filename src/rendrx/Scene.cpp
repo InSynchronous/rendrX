@@ -90,11 +90,87 @@ void Scene::launch() {
     this->loadTextures();
 }
 
+bool Scene::isChunkVisible(glm::ivec2 chunkPos,
+                           const glm::mat4 &viewProjection) {
+
+    constexpr float chunkSize = 16.0f;
+    constexpr float chunkHeight = 256.0f;
+
+    float minX = chunkPos.x * chunkSize;
+    float minZ = chunkPos.y * chunkSize;
+
+    glm::vec3 min{minX, 0.0f, minZ};
+
+    glm::vec3 max{minX + chunkSize, chunkHeight, minZ + chunkSize};
+
+    // extract frustum planes from projection matrix.
+    glm::vec4 planes[6];
+
+    planes[0] = glm::vec4(viewProjection[0][3] + viewProjection[0][0],
+                          viewProjection[1][3] + viewProjection[1][0],
+                          viewProjection[2][3] + viewProjection[2][0],
+                          viewProjection[3][3] + viewProjection[3][0]); // Left
+
+    planes[1] = glm::vec4(viewProjection[0][3] - viewProjection[0][0],
+                          viewProjection[1][3] - viewProjection[1][0],
+                          viewProjection[2][3] - viewProjection[2][0],
+                          viewProjection[3][3] - viewProjection[3][0]); // Right
+
+    planes[2] =
+        glm::vec4(viewProjection[0][3] + viewProjection[0][1],
+                  viewProjection[1][3] + viewProjection[1][1],
+                  viewProjection[2][3] + viewProjection[2][1],
+                  viewProjection[3][3] + viewProjection[3][1]); // Bottom
+
+    planes[3] = glm::vec4(viewProjection[0][3] - viewProjection[0][1],
+                          viewProjection[1][3] - viewProjection[1][1],
+                          viewProjection[2][3] - viewProjection[2][1],
+                          viewProjection[3][3] - viewProjection[3][1]); // Top
+
+    planes[4] = glm::vec4(viewProjection[0][3] + viewProjection[0][2],
+                          viewProjection[1][3] + viewProjection[1][2],
+                          viewProjection[2][3] + viewProjection[2][2],
+                          viewProjection[3][3] + viewProjection[3][2]); // Near
+
+    planes[5] = glm::vec4(viewProjection[0][3] - viewProjection[0][2],
+                          viewProjection[1][3] - viewProjection[1][2],
+                          viewProjection[2][3] - viewProjection[2][2],
+                          viewProjection[3][3] - viewProjection[3][2]); // Far
+
+    // Test AABB against each plane.
+    for (glm::vec4 plane : planes) {
+
+        glm::vec3 normal{plane.x, plane.y, plane.z};
+
+        // find the AABB vertex furthest in the directio of the plane normal.
+        glm::vec3 positive{normal.x >= 0.0f ? max.x : min.x,
+                           normal.y >= 0.0f ? max.y : min.y,
+                           normal.z >= 0.0f ? max.z : min.z};
+
+        // out of plane = gett banned gg ez
+        if (glm::dot(normal, positive) + plane.w < 0.0f)
+            return false;
+    }
+
+    return true;
+}
+
 void Scene::render() {
     float currentTime = glfwGetTime();
     float deltaTime = currentTime - lastFrame;
     lastFrame = currentTime;
-    std::cout << "FPS: " << 1 / deltaTime << std::endl;
+
+    fpsTimer += deltaTime;
+    frameCount++;
+
+    if (fpsTimer >= 1.0f) {
+        fps = frameCount / fpsTimer;
+
+        std::cout << "FPS: " << fps << '\n';
+
+        fpsTimer = 0.0f;
+        frameCount = 0;
+    }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
         cameraRot.z -= 1.0f;
@@ -178,6 +254,8 @@ void Scene::render() {
                                             500.0f               // far
     );
 
+    glm::mat4 viewProjection = projection * view;
+
     glClearColor(0.1, 0.2, 0.3, 1.0);
     glEnable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -202,6 +280,9 @@ void Scene::render() {
     glFrontFace(GL_CCW);
 
     for (auto &[position, chunk] : world->chunks) {
+        if (!isChunkVisible(position, viewProjection)) {
+            continue;
+        }
         chunk->draw();
     }
 

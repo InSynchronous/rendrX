@@ -20,6 +20,9 @@ class Scene {
     glm::vec3 prevCameraPos = glm::vec3(0.0f, 120.0f, 3.0f);
     glm::vec3 cameraPos = prevCameraPos;
     glm::vec3 cameraRot = glm::vec3(0.0f, 0.0f, 55.0f);
+    float fpsTimer = 0.0f;
+    int frameCount = 0;
+    float fps = 0.0f;
 
     World *world = nullptr;
 
@@ -63,6 +66,7 @@ class Scene {
 
     void init();
     void loadTextures();
+    bool isChunkVisible(glm::ivec2 chunkPos, const glm::mat4 &viewProjection);
 
   public:
     Scene();

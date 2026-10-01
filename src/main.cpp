@@ -1,13 +1,15 @@
 #include "rendrx/Scene.h"
 #include "rendrx/World.h"
-#include <iostream>
+
+#define RENDER 18
+
 using namespace rendrx;
 
 int main() {
     rendrx::Scene scene;
 
     World world(0);
-    world.loadChunks({0, 0}, 12);
+    world.loadChunks({0, 0}, RENDER);
 
     // world.runAllTasks();
 
@@ -31,8 +33,8 @@ int main() {
         world.runTasks();
 
         if (prevChunkPos != chunkPos) {
-            world.loadChunks(chunkPos, 12);
-            world.unloadChunks(chunkPos, 12);
+            world.loadChunks(chunkPos, RENDER);
+            world.unloadChunks(chunkPos, RENDER);
         }
 
         scene.render();

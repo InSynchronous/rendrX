@@ -662,3 +662,15 @@ this means we transfer the capabilities into the chunk.add_face() section of the
 I changed it so thatt chunk now creates the verticies in place and doesn't use the quad class.
 This should eliminate useless object creations. Honestly, idk how much of a difference that made.
 It's hard to benchmark due to bad FPS counter.
+
+Let's fix the FPS counter. It works. Now let me try inceasing render distance.
+Going from 140 ish fps at 12 render distance to 70 at 18 render distance is not good.
+
+I need to consider doing frustum culling. I've heard its great for reducing gpu load.
+
+I implemented a bad version called AABB using 8 corners and it doesn't work great. Its clipping like
+everything, including things right infront of me for like 5 chunks. I'm too lazy to fix this,
+so lets just use a proper frustum plane check. I took the projection indecies off of learnopengl.com.
+
+I was just about to say, man this FPS boost ins't that good, its still 144fps. Then I realized.
+That was on 18 chunks!!!! So it did in fact work. From 60 to 100-140 is amazing.
