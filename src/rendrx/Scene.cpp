@@ -46,6 +46,23 @@ void Scene::init() {
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+
+    // init
+    modelLocation = glGetUniformLocation(shaderProgram, "model");
+
+    viewLocation = glGetUniformLocation(shaderProgram, "view");
+
+    projectionLocation = glGetUniformLocation(shaderProgram, "projection");
+
+    glEnable(GL_DEPTH_TEST);
+
+    glClearColor(0.1, 0.2, 0.3, 1.0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 }
 
 void Scene::loadTextures() {
@@ -249,35 +266,23 @@ void Scene::render() {
     );
 
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), // FOV
-                                            800.0f / 600.0f,     // aspect ratio
+                                            1280.0f / 800.0f,    // aspect ratio
                                             0.1f,                // near
                                             500.0f               // far
     );
 
     glm::mat4 viewProjection = projection * view;
 
-    glClearColor(0.1, 0.2, 0.3, 1.0);
-    glEnable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // configure matricies
     glUseProgram(shaderProgram);
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1,
-                       GL_FALSE, &model[0][0]);
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, &model[0][0]);
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE,
-                       &view[0][0]);
+    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1,
-                       GL_FALSE, &projection[0][0]);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+    glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, &projection[0][0]);
 
     for (auto &[position, chunk] : world->chunks) {
         if (!isChunkVisible(position, viewProjection)) {

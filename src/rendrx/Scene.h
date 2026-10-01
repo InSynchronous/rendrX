@@ -13,6 +13,9 @@ class Scene {
   private:
     GLFWwindow *window;
     unsigned int vertexShader, fragmentShader, shaderProgram, texture;
+    GLint modelLocation;
+    GLint viewLocation;
+    GLint projectionLocation;
 
     float deltaTime;
     float lastFrame;

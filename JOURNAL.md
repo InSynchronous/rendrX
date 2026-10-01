@@ -673,4 +673,14 @@ everything, including things right infront of me for like 5 chunks. I'm too lazy
 so lets just use a proper frustum plane check. I took the projection indecies off of learnopengl.com.
 
 I was just about to say, man this FPS boost ins't that good, its still 144fps. Then I realized.
-That was on 18 chunks!!!! So it did in fact work. From 60 to 100-140 is amazing.
+That was on 18 chunks!!!! So it did in fact work. From 60 to 100-140 is amazing. Raised it
+to 24 chunks, now i'm still at 140s fps. Lets see if I can handle 32. It got down to 80 but, it's
+doing quite well. 
+
+Another unoptimized thing is the draw loop. I'm running things like opengl calls that only
+need to be called once.
+
+I moved the projection/model/view matricies lookup out into the constructor. Let's see what else.
+I moved the rest of the enables and one time things.
+
+This raised fps by about 5 to 10 I think.

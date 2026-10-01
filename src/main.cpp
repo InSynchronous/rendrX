@@ -1,7 +1,7 @@
 #include "rendrx/Scene.h"
 #include "rendrx/World.h"
 
-#define RENDER 18
+#define RENDER 32
 
 using namespace rendrx;
 
