@@ -12,7 +12,9 @@ namespace rendrx {
 class Chunk {
   private:
     std::array<std::array<std::array<Block, 16>, 256>, 16> blocks;
-    std::vector<std::unique_ptr<Object>> objects;
+    std::vector<float> vertices;
+    void addVertex(glm::vec3 pos, glm::vec2 uv);
+    void addQuad(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4, UV uv);
 
     Generation &generation;
 
@@ -31,7 +33,6 @@ class Chunk {
     void addFace(Block type, Face face, glm::vec3 pos);
 
     void uploadTriangles();
-    void addObject(std::unique_ptr<Object> o);
     void draw();
     void init();
 };

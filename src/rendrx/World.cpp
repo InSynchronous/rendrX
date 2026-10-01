@@ -77,25 +77,30 @@ void World::generationLoop() {
 }
 
 void World::runTasks() {
-    // Load chunksFinished to finished local copy
-    std::queue<std::unique_ptr<Chunk>> finished;
+    int count = 0;
 
-    {
-        std::lock_guard lock(finishedMutex);
-        std::swap(finished, chunksFinished);
-    }
+    while (count < 3) {
+        std::unique_ptr<Chunk> chunk;
 
-    while (!finished.empty()) {
-        auto chunk = std::move(finished.front());
-        finished.pop();
+        {
+            std::lock_guard lock(finishedMutex);
+
+            if (chunksFinished.empty())
+                break;
+
+            chunk = std::move(chunksFinished.front());
+            chunksFinished.pop();
+        }
 
         chunk->init();
-        chunk->uploadTriangles(); // upload
+        chunk->uploadTriangles();
 
         {
             std::lock_guard lock(chunksMutex);
             chunks[chunk->chunkCoord] = std::move(chunk);
         }
+
+        count++;
     }
 }
 

@@ -620,3 +620,45 @@ LOD chunks, level of detail.
 Firstly though, the textures look TRASH. Let me see why. Found the issue in Quad.cpp. I had my UV coordinates wrong.
 Whoops! Also, I searched online about opengl smoothing/blurring low quality textures, and turns out that was an easy fix
 too.
+
+### i am inevitible
+I've been avoiding it, but its going to happen eventually. I need to actually program the lighting system.
+There are many ways to do this, some use differed rendering, which is optimal, some use sketchy tricks to
+guesstimate shadows, and some use raytracing to calculate shadows. I don't really know what I'm going to do.
+Ykw, lets just focus on render distance. Ill increase it till i can't anymore.
+
+I upped it to 24 chunks and it got to like 30fps, but with messages that read out 131 fps in between??
+I have no idea where this could even come from.
+
+```FPS: 145.061
+FPS: 38.9176
+FPS: 131.409
+FPS: 39.7466
+FPS: 40.6008
+FPS: 195.666
+FPS: 40.0365
+FPS: 49.8349
+FPS: 38.0975
+FPS: 123.529
+FPS: 35.6295
+FPS: 131.359```
+
+Let me try to see what I can optimize.
+
+### ideas
+ - frustum culling
+ - get rid of stupid quad/object path
+ - add a cache for those chunk border block check things
+ - limit the amount of chunks sent in main thread per cycle to like 2.
+
+## September 30th, 2026
+did a poll on instagram on what to do. seems like everyone wants infinite render distance. let's program some more
+optimizations now.
+
+one issue is the uselessness of the quad class. its like 80 bytes, insttantiatetd on the heap, and literally cleared
+out on every "uploadTriangles()" call. instead, lets just push the vertecies instead of quad creation.
+this means we transfer the capabilities into the chunk.add_face() section of the code.
+
+I changed it so thatt chunk now creates the verticies in place and doesn't use the quad class.
+This should eliminate useless object creations. Honestly, idk how much of a difference that made.
+It's hard to benchmark due to bad FPS counter.

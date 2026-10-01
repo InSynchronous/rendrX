@@ -46,62 +46,73 @@ Block Chunk::getBlock(glm::vec3 position) {
     return blocks[x][y][z];
 }
 
+void Chunk::addVertex(glm::vec3 pos, glm::vec2 uv) {
+    vertices.push_back(pos.x);
+    vertices.push_back(pos.y);
+    vertices.push_back(pos.z);
+
+    vertices.push_back(uv.x);
+    vertices.push_back(uv.y);
+}
+
+void Chunk::addQuad(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4,
+                    UV uv) {
+    glm::vec2 u1{uv.min.x, uv.min.y};
+    glm::vec2 u2{uv.max.x, uv.min.y};
+    glm::vec2 u3{uv.max.x, uv.max.y};
+    glm::vec2 u4{uv.min.x, uv.max.y};
+
+    // Triangle 1
+    addVertex(p1, u1);
+    addVertex(p2, u2);
+    addVertex(p3, u3);
+
+    // Triangle 2
+    addVertex(p1, u1);
+    addVertex(p3, u3);
+    addVertex(p4, u4);
+}
+
 void Chunk::addFace(Block type, Face face, glm::vec3 pos) {
-    float s = 0.5f;
+    constexpr float s = 0.5f;
 
     UV uv = blockToUV[static_cast<int>(type)][static_cast<int>(face)];
 
     switch (face) {
+
     case Face::FRONT:
-        addObject(std::make_unique<Quad>(
-            pos + glm::vec3{-s, -s, +s}, pos + glm::vec3{+s, -s, +s},
-            pos + glm::vec3{+s, +s, +s}, pos + glm::vec3{-s, +s, +s}, uv));
+        addQuad(pos + glm::vec3{-s, -s, +s}, pos + glm::vec3{+s, -s, +s},
+                pos + glm::vec3{+s, +s, +s}, pos + glm::vec3{-s, +s, +s}, uv);
         break;
 
     case Face::BACK:
-        addObject(std::make_unique<Quad>(
-            pos + glm::vec3{+s, -s, -s}, pos + glm::vec3{-s, -s, -s},
-            pos + glm::vec3{-s, +s, -s}, pos + glm::vec3{+s, +s, -s}, uv));
+        addQuad(pos + glm::vec3{+s, -s, -s}, pos + glm::vec3{-s, -s, -s},
+                pos + glm::vec3{-s, +s, -s}, pos + glm::vec3{+s, +s, -s}, uv);
         break;
 
     case Face::TOP:
-        addObject(std::make_unique<Quad>(
-            pos + glm::vec3{-s, +s, +s}, pos + glm::vec3{+s, +s, +s},
-            pos + glm::vec3{+s, +s, -s}, pos + glm::vec3{-s, +s, -s}, uv));
+        addQuad(pos + glm::vec3{-s, +s, +s}, pos + glm::vec3{+s, +s, +s},
+                pos + glm::vec3{+s, +s, -s}, pos + glm::vec3{-s, +s, -s}, uv);
         break;
 
     case Face::BOTTOM:
-        addObject(std::make_unique<Quad>(
-            pos + glm::vec3{-s, -s, -s}, pos + glm::vec3{+s, -s, -s},
-            pos + glm::vec3{+s, -s, +s}, pos + glm::vec3{-s, -s, +s}, uv));
+        addQuad(pos + glm::vec3{-s, -s, -s}, pos + glm::vec3{+s, -s, -s},
+                pos + glm::vec3{+s, -s, +s}, pos + glm::vec3{-s, -s, +s}, uv);
         break;
 
     case Face::RIGHT:
-        addObject(std::make_unique<Quad>(
-            pos + glm::vec3{+s, -s, +s}, pos + glm::vec3{+s, -s, -s},
-            pos + glm::vec3{+s, +s, -s}, pos + glm::vec3{+s, +s, +s}, uv));
+        addQuad(pos + glm::vec3{+s, -s, +s}, pos + glm::vec3{+s, -s, -s},
+                pos + glm::vec3{+s, +s, -s}, pos + glm::vec3{+s, +s, +s}, uv);
         break;
 
     case Face::LEFT:
-        addObject(std::make_unique<Quad>(
-            pos + glm::vec3{-s, -s, -s}, pos + glm::vec3{-s, -s, +s},
-            pos + glm::vec3{-s, +s, +s}, pos + glm::vec3{-s, +s, -s}, uv));
+        addQuad(pos + glm::vec3{-s, -s, -s}, pos + glm::vec3{-s, -s, +s},
+                pos + glm::vec3{-s, +s, +s}, pos + glm::vec3{-s, +s, -s}, uv);
         break;
     }
 }
 
-void Chunk::addObject(std::unique_ptr<Object> o) {
-    objects.push_back(std::move(o));
-}
-
 void Chunk::uploadTriangles() {
-    // Flatten the array
-    std::vector<float> vertices;
-    for (const std::unique_ptr<Object> &obj : objects) {
-        auto v = obj->flatten();
-        vertices.insert(vertices.end(), v.begin(), v.end());
-    }
-    objects.clear();
     vertex_count = vertices.size() / 5; // 5 floats per vertex
 
     glBindVertexArray(VAO);
