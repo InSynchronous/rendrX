@@ -46,13 +46,17 @@ Block Chunk::getBlock(glm::vec3 position) {
     return blocks[x][y][z];
 }
 
-void Chunk::addVertex(glm::vec3 pos, glm::vec2 uv) {
+void Chunk::addVertex(glm::vec3 pos, glm::vec2 uv, glm::vec3 normal) {
     vertices.push_back(pos.x);
     vertices.push_back(pos.y);
     vertices.push_back(pos.z);
 
     vertices.push_back(uv.x);
     vertices.push_back(uv.y);
+
+    vertices.push_back(normal.x);
+    vertices.push_back(normal.y);
+    vertices.push_back(normal.z);
 }
 
 void Chunk::addQuad(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4,
@@ -62,15 +66,17 @@ void Chunk::addQuad(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4,
     glm::vec2 u3{uv.max.x, uv.max.y};
     glm::vec2 u4{uv.min.x, uv.max.y};
 
+    glm::vec3 normal = glm::normalize(glm::cross(p2 - p1, p3 - p1));
+
     // Triangle 1
-    addVertex(p1, u1);
-    addVertex(p2, u2);
-    addVertex(p3, u3);
+    addVertex(p1, u1, normal);
+    addVertex(p2, u2, normal);
+    addVertex(p3, u3, normal);
 
     // Triangle 2
-    addVertex(p1, u1);
-    addVertex(p3, u3);
-    addVertex(p4, u4);
+    addVertex(p1, u1, normal);
+    addVertex(p3, u3, normal);
+    addVertex(p4, u4, normal);
 }
 
 void Chunk::addFace(Block type, Face face, glm::vec3 pos) {
@@ -113,7 +119,7 @@ void Chunk::addFace(Block type, Face face, glm::vec3 pos) {
 }
 
 void Chunk::uploadTriangles() {
-    vertex_count = vertices.size() / 5; // 5 floats per vertex
+    vertex_count = vertices.size() / 8; // 5 floats per vertex
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO); // select our vbo
@@ -126,7 +132,7 @@ void Chunk::uploadTriangles() {
                           3, // 3 components per vertex (Xyz)
                           GL_FLOAT, // is a float
                           GL_FALSE, // don't round?? idk i mean its a float lol
-                          5 * sizeof(float), // vertex size in vbo
+                          8 * sizeof(float), // vertex size in vbo
                           (void *)0          // no offset (0)
     );
 
@@ -135,11 +141,21 @@ void Chunk::uploadTriangles() {
                           2, // 2 components per vertex (uv)
                           GL_FLOAT, // is a float
                           GL_FALSE, // don't round?? idk i mean its a float lol
-                          5 * sizeof(float),          // vertex size in vbo
+                          8 * sizeof(float),          // vertex size in vbo
                           (void *)(3 * sizeof(float)) // skip xyz offset (3)
     );
 
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, // layout location = 1 as seen in frag shader
+                          3, // 2 components per vertex (normal)
+                          GL_FLOAT, // is a float
+                          GL_FALSE, // don't round?? idk i mean its a float lol
+                          8 * sizeof(float),          // vertex size in vbo
+                          (void *)(5 * sizeof(float)) // skip xyz+uv offset (5)
+    );
+
+    glEnableVertexAttribArray(2);
 }
 
 void Chunk::draw() {

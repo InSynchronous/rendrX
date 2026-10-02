@@ -694,3 +694,15 @@ is a fog effect. All I need is the position of the fragment. I modified the vert
 if it still builds.
 
 Got it implemented. Works kinda well, needs to be adjusted by render distance.
+
+### Lighting
+Lighting works by taking the angle between a ray from the fragment to the light source and its normal.
+![image of a diagram demonstrating what I described](https://learnopengl.com/img/lighting/diffuse_light.png)
+
+To do this, I need to pass normals into the vertices, into the vertex shader and passed into the fragment shader.
+
+Uhh that ended up with the weirdest graphical glitch, all textures are red and shit. 0 clue lol. Found the bug.
+I forgot to change the stride(increment) from 5 floats to 8 floats. It works now all fine. Turned on normals.
+Looks beautiful. Should probably screenshot ts more lol.
+
+![normals being rendered as color](images/normality.png)

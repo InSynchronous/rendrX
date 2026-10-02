@@ -13,7 +13,7 @@ class Chunk {
   private:
     std::array<std::array<std::array<Block, 16>, 256>, 16> blocks;
     std::vector<float> vertices;
-    void addVertex(glm::vec3 pos, glm::vec2 uv);
+    void addVertex(glm::vec3 pos, glm::vec2 uv, glm::vec3 normal);
     void addQuad(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4, UV uv);
 
     Generation &generation;
