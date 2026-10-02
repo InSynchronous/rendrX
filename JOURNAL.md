@@ -684,3 +684,13 @@ I moved the projection/model/view matricies lookup out into the constructor. Let
 I moved the rest of the enables and one time things.
 
 This raised fps by about 5 to 10 I think.
+
+I think the next best thing to go for is LOD (level of detail). Basically, for chunks hella far out, we can set them up to 
+just simplify and lets say be only 8x8 blocks, but take up the full space of a 16x16. Let me read about this.
+
+## October 2nd, 2026
+Broke my streak yesterday due to bordem and motivational rut. Lets get back to work. The first thing I want to implement
+is a fog effect. All I need is the position of the fragment. I modified the vertex shader to pass it on. Let's see
+if it still builds.
+
+Got it implemented. Works kinda well, needs to be adjusted by render distance.

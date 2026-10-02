@@ -39,13 +39,17 @@ class Scene {
         layout (location = 1) in vec2 uvData;
     
         out vec2 uvCoord;
+        out float fogDistance;
     
         uniform mat4 model;
         uniform mat4 view;
         uniform mat4 projection;
         void main() {
-            gl_Position = projection * view * model * vec4(vertData, 1.0);
+            vec4 viewPos = view * model * vec4(vertData, 1.0);
+            gl_Position = projection * viewPos;
             uvCoord = uvData;
+
+            fogDistance = length(viewPos.xyz);
         }
     )";
 
@@ -58,12 +62,30 @@ class Scene {
         #version 330 core
     
         in vec2 uvCoord;
+        in float fogDistance;
+
         out vec4 FragColor;
     
         uniform sampler2D texture1;
+        
+        uniform vec3 fogColor;
+        uniform float fogStart;
+        uniform float fogEnd;
     
         void main() {
-            FragColor = texture(texture1, uvCoord);
+            vec4 textureOut = texture(texture1, uvCoord);
+            float fogFactor = smoothstep(
+                fogStart,
+                fogEnd,
+                fogDistance
+            );
+
+            FragColor = mix(
+                textureOut,
+                vec4(fogColor, 1.0),
+                fogFactor
+            );
+
         }
     )";
 

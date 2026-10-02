@@ -2,6 +2,7 @@
 #include "glad/gl.h"
 #include <GLFW/glfw3.h>
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 
@@ -41,11 +42,69 @@ void Scene::init() {
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
-    // make the program
     shaderProgram = glCreateProgram();
+
+    if (shaderProgram == 0) {
+        std::cerr << "[Shader] ERROR: Failed to create shader program.\n";
+        std::exit(-1);
+    } else {
+        std::cout << "[Shader] Created shader program. ID: " << shaderProgram
+                  << '\n';
+    }
+
     glAttachShader(shaderProgram, vertexShader);
+
+    if (glGetError() != GL_NO_ERROR) {
+        std::cerr << "[Shader] ERROR: Failed to attach vertex shader. ID: "
+                  << vertexShader << '\n';
+        std::exit(-1);
+
+    } else {
+        std::cout << "[Shader] Attached vertex shader. ID: " << vertexShader
+                  << '\n';
+    }
+
     glAttachShader(shaderProgram, fragmentShader);
+
+    if (glGetError() != GL_NO_ERROR) {
+        std::cerr << "[Shader] ERROR: Failed to attach fragment shader. ID: "
+                  << fragmentShader << '\n';
+        std::exit(-1);
+
+    } else {
+        std::cout << "[Shader] Attached fragment shader. ID: " << fragmentShader
+                  << '\n';
+    }
+
+    std::cout << "[Shader] Linking program " << shaderProgram << "...\n";
+
     glLinkProgram(shaderProgram);
+
+    GLint success = GL_FALSE;
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+
+    if (!success) {
+        char infoLog[1024];
+        glGetProgramInfoLog(shaderProgram, sizeof(infoLog), nullptr, infoLog);
+
+        std::cerr << "[Shader] Program linking FAILED.\n";
+        std::cerr << "[Shader] Program ID: " << shaderProgram << '\n';
+        std::cerr << "[Shader] Linker log:\n" << infoLog << '\n';
+        std::exit(-1);
+
+    } else {
+        std::cout << "[Shader] Program linked successfully.\n";
+        std::cout << "[Shader] Program ID: " << shaderProgram << '\n';
+    }
+
+    glUseProgram(shaderProgram);
+
+    glUniform3f(glGetUniformLocation(shaderProgram, "fogColor"), 0.6f, 0.7f,
+                0.8f);
+
+    glUniform1f(glGetUniformLocation(shaderProgram, "fogStart"), 100.0f);
+
+    glUniform1f(glGetUniformLocation(shaderProgram, "fogEnd"), 200.0f);
 
     // init
     modelLocation = glGetUniformLocation(shaderProgram, "model");
