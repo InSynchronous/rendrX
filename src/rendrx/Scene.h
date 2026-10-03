@@ -13,11 +13,15 @@ class Scene {
   private:
     GLFWwindow *window;
     unsigned int geometryVertexShader, geometryFragmentShader,
-        lightingFragmentShader, lightingVertexShader, lightingShader,
-        geometryShader, texture, fullscreenVAO;
+        lightingFragmentShader, lightingVertexShader, shadowVertexShader,
+        shadowShader, lightingShader, geometryShader, texture, fullscreenVAO;
     GLint modelLocation;
     GLint viewLocation;
     GLint projectionLocation;
+    GLint shadowLightSpaceLocation;
+    GLint shadowModelLocation;
+    GLint shadowMapUniform;
+    GLint lightSpaceMatrixUniform;
 
     GLint groundLightLoc;
     GLint skyLightLoc;
@@ -31,6 +35,10 @@ class Scene {
     GLuint gDepthLoc;
     GLuint gAlbedoLoc;
 
+    // shadow buffer
+    GLuint shadowMap;
+    GLuint shadowFBO;
+
     float deltaTime;
     float lastFrame;
 
@@ -40,6 +48,9 @@ class Scene {
     float fpsTimer = 0.0f;
     int frameCount = 0;
     float fps = 0.0f;
+
+    glm::vec3 sunDirection;
+    glm::vec3 sunPos;
 
     World *world = nullptr;
 
@@ -95,6 +106,25 @@ class Scene {
         }
     )";
 
+    const char *shadowVertexShaderSource = R"(
+        #version 330 core
+
+        layout (location = 0) in vec3 vertData;
+        
+        uniform mat4 model;
+        uniform mat4 lightSpaceMatrix;
+        
+        
+        void main()
+        {
+            gl_Position =
+                lightSpaceMatrix *
+                model *
+                vec4(vertData, 1.0);
+        }
+        
+    )";
+
     /*
     Fragment shader code, called on each pixel draw thats in the triangle.
     returns texture lookup result
@@ -137,17 +167,51 @@ class Scene {
     
         uniform vec3 sunDirection;
         uniform vec3 sunLight;
-
+    
         uniform float fogStart;
         uniform float fogEnd;
         uniform vec3 fogColor;
         uniform vec3 cameraPosition;
     
+        uniform sampler2D shadowMap;
+        uniform mat4 lightSpaceMatrix;
+         
         void main()
         {
             vec3 position = texture(gPosition, uv).rgb;
             vec3 normal = normalize(texture(gNormal, uv).rgb);
             vec3 albedo = texture(gAlbedo, uv).rgb;
+    
+            vec4 lightSpacePosition =
+                lightSpaceMatrix * vec4(position, 1.0);
+    
+            vec3 shadowCoords =
+                lightSpacePosition.xyz /
+                lightSpacePosition.w;
+    
+            shadowCoords =
+                shadowCoords * 0.5 + 0.5;
+    
+            float shadow = 0.0;
+
+if (
+    shadowCoords.x >= 0.0 &&
+    shadowCoords.x <= 1.0 &&
+    shadowCoords.y >= 0.0 &&
+    shadowCoords.y <= 1.0 &&
+    shadowCoords.z >= 0.0 &&
+    shadowCoords.z <= 1.0
+)
+{
+    float shadowDepth = texture(shadowMap, shadowCoords.xy).r;
+    float currentDepth = shadowCoords.z;
+
+    float bias = 0.005;
+
+    shadow = currentDepth - bias > shadowDepth
+        ? 1.0
+        : 0.0;
+}
     
             float hemisphere = normal.y * 0.5 + 0.5;
     
@@ -164,26 +228,30 @@ class Scene {
     
             vec3 lighting =
                 ambient +
-                sunAmount * sunLight;
-
-
-            float distanceToCamera = length(position - cameraPosition);
-
+                sunAmount * sunLight * (1.0 - shadow);
+    
+            float distanceToCamera =
+                length(position - cameraPosition);
+    
             float fogFactor = clamp(
                 (distanceToCamera - fogStart) / (fogEnd - fogStart),
                 0.0,
                 1.0
             );
-
-            vec3 final = mix(albedo*lighting, fogColor, fogFactor);
+    
+            vec3 final = mix(
+                albedo * lighting,
+                fogColor,
+                fogFactor
+            );
     
             FragColor = vec4(
                 final,
                 1.0
             );
         }
+        
     )";
-
     void init();
     void loadTextures();
     bool isChunkVisible(glm::ivec2 chunkPos, const glm::mat4 &viewProjection);

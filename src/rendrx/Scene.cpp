@@ -163,6 +163,53 @@ void Scene::init() {
         std::cout << "[Shader] Program ID: " << lightingShader << '\n';
     }
 
+    shadowMapUniform = glGetUniformLocation(lightingShader, "shadowMap");
+
+    lightSpaceMatrixUniform =
+        glGetUniformLocation(lightingShader, "lightSpaceMatrix");
+
+    // again
+    shadowVertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(shadowVertexShader, 1, &shadowVertexShaderSource, NULL);
+    glCompileShader(shadowVertexShader);
+    shadowShader = glCreateProgram();
+    if (shadowShader == 0) {
+        std::cerr
+            << "[Shader] ERROR: Failed to create shadow shader program.\n";
+        std::exit(-1);
+    } else {
+        std::cout << "[Shader] Created shadow shader program. ID: "
+                  << shadowShader << '\n';
+    }
+    glAttachShader(shadowShader, shadowVertexShader);
+    if (glGetError() != GL_NO_ERROR) {
+        std::cerr
+            << "[Shader] ERROR: Failed to attach shadow vertex shader. ID: "
+            << shadowVertexShader << '\n';
+        std::exit(-1);
+    } else {
+        std::cout << "[Shader] Attached shadow vertex shader. ID: "
+                  << shadowVertexShader << '\n';
+    }
+    std::cout << "[Shader] Linking shadow program " << shadowShader << "...\n";
+    glLinkProgram(shadowShader);
+    success = GL_FALSE;
+
+    glGetProgramiv(shadowShader, GL_LINK_STATUS, &success);
+    if (!success) {
+        char infoLog[1024];
+        glGetProgramInfoLog(shadowShader, sizeof(infoLog), nullptr, infoLog);
+        std::cerr << "[Shader] Shadow program linking FAILED.\n";
+        std::cerr << "[Shader] Program ID: " << shadowShader << '\n';
+        std::cerr << "[Shader] Linker log:\n" << infoLog << '\n';
+        std::exit(-1);
+    } else {
+        std::cout << "[Shader] Shadow program linked successfully.\n";
+        std::cout << "[Shader] Program ID: " << shadowShader << '\n';
+    }
+
+    shadowModelLocation = glGetUniformLocation(shadowShader, "model");
+
     glUseProgram(lightingShader);
 
     // Lighting
@@ -171,7 +218,7 @@ void Scene::init() {
     sunLightLoc = glGetUniformLocation(lightingShader, "sunLight");
     groundLightLoc = glGetUniformLocation(lightingShader, "groundLight");
 
-    glm::vec3 sunDirection = glm::normalize(glm::vec3(0.4f, 1.0f, 0.3f));
+    sunDirection = glm::normalize(glm::vec3(0.4f, 1.0f, 0.3f));
 
     glm::vec3 sunLight(0.45f, 0.42f, 0.36f);
 
@@ -204,6 +251,10 @@ void Scene::init() {
     viewLocation = glGetUniformLocation(geometryShader, "view");
 
     projectionLocation = glGetUniformLocation(geometryShader, "projection");
+
+    // shadow
+    shadowLightSpaceLocation =
+        glGetUniformLocation(shadowShader, "lightSpaceMatrix");
 
     // Differed rendering
     glGenVertexArrays(1, &fullscreenVAO);
@@ -257,6 +308,40 @@ void Scene::init() {
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
                            gDepthLoc, 0);
+
+    // Sun depth buffer
+    glGenFramebuffers(1, &shadowFBO);
+    glGenTextures(1, &shadowMap);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 2048, 2048, 0,
+                 GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           shadowMap, 0);
+
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "SHADOW FBO ERROR: 0x" << std::hex << status << std::dec
+                  << '\n';
+    } else {
+        std::cout << "Shadow FBO COMPLETE\n";
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, gBufferLoc);
 
     // Generate once in initalization
     GLuint attachments[] = {
@@ -492,7 +577,46 @@ void Scene::render() {
                                             500.0f               // far
     );
 
-    glm::mat4 viewProjection = projection * view;
+    // pass 0
+    glm::vec3 sunDirection = glm::normalize(glm::vec3(0.4f, 1.0f, 0.3f));
+
+    glm::vec3 lightPos = cameraPos + sunDirection * 300.0f;
+
+    glm::mat4 lightView =
+        glm::lookAt(lightPos, cameraPos, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 lightProjection =
+        glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, 1.0f, 1000.0f);
+
+    glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
+
+    glViewport(0, 0, 2048, 2048);
+
+    // IMPORTANT
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
+
+    glDisable(GL_CULL_FACE);
+
+    glClearDepth(1.0);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(shadowShader);
+
+    glUniformMatrix4fv(shadowModelLocation, 1, GL_FALSE, &model[0][0]);
+
+    glUniformMatrix4fv(shadowLightSpaceLocation, 1, GL_FALSE,
+                       &lightSpaceMatrix[0][0]);
+
+    for (auto &[position, chunk] : world->chunks) {
+        chunk->draw();
+    }
+
+    // pass 1
+    glViewport(0, 0, 1280, 720);
 
     glBindFramebuffer(GL_FRAMEBUFFER, gBufferLoc);
 
@@ -512,11 +636,6 @@ void Scene::render() {
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, &projection[0][0]);
 
     for (auto &[position, chunk] : world->chunks) {
-
-        if (!isChunkVisible(position, viewProjection)) {
-            continue;
-        }
-
         chunk->draw();
     }
 
@@ -551,6 +670,14 @@ void Scene::render() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gAlbedoLoc);
     glUniform1i(gAlbedoUniform, 2);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, shadowMap);
+
+    glUniform1i(shadowMapUniform, 3);
+
+    glUniformMatrix4fv(lightSpaceMatrixUniform, 1, GL_FALSE,
+                       &lightSpaceMatrix[0][0]);
 
     glBindVertexArray(fullscreenVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
