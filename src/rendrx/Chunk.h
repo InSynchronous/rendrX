@@ -30,6 +30,8 @@ class Chunk {
     }
 
     Block getBlock(glm::vec3 position);
+    void clearMesh();
+    void setBlock(glm::vec3 position, Block block);
     void addFace(Block type, Face face, glm::vec3 pos);
 
     void uploadTriangles();

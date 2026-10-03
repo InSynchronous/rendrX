@@ -46,6 +46,20 @@ Block Chunk::getBlock(glm::vec3 position) {
     return blocks[x][y][z];
 }
 
+void Chunk::clearMesh() { vertices.clear(); }
+
+void Chunk::setBlock(glm::vec3 position, Block block) {
+    int x = position.x;
+    int y = position.y;
+    int z = position.z;
+
+    if (x < 0 || x >= 16 || y < 0 || y >= 256 || z < 0 || z >= 16) {
+        return;
+    }
+
+    blocks[x][y][z] = block;
+}
+
 void Chunk::addVertex(glm::vec3 pos, glm::vec2 uv, glm::vec3 normal) {
     vertices.push_back(pos.x);
     vertices.push_back(pos.y);

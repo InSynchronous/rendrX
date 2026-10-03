@@ -9,6 +9,20 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace rendrx {
+struct Hit {
+    bool hit = false;
+
+    glm::ivec3 block;
+    glm::ivec3 normal;
+
+    float distance = 0.0f;
+};
+
+struct Ray {
+    glm::vec3 origin;
+    glm::vec3 direction;
+};
+
 class Scene {
   private:
     GLFWwindow *window;
@@ -285,6 +299,8 @@ class Scene {
     void init();
     void loadTextures();
     bool isChunkVisible(glm::ivec2 chunkPos, const glm::mat4 &viewProjection);
+
+    Hit raycast(Ray &r, float maxDistance);
 
   public:
     Scene();

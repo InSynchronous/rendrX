@@ -69,10 +69,12 @@ void World::generationLoop() {
 
         auto end = std::chrono::high_resolution_clock::now();
 
+        /*
         std::cout
             << "Generated chunk (" << pos.x << ", " << pos.y << ") in "
             << std::chrono::duration<double, std::milli>(end - start).count()
             << " ms\n";
+        */
     }
 }
 
@@ -155,6 +157,36 @@ Block World::getBlock(glm::vec3 position) {
     }
 }
 
+void World::setBlock(glm::vec3 position, Block block) {
+    int x = static_cast<int>(std::floor(position.x));
+    int z = static_cast<int>(std::floor(position.z));
+    int y = static_cast<int>(std::floor(position.y));
+
+    int chunkX = static_cast<int>(std::floor(x / 16.0f));
+    int chunkZ = static_cast<int>(std::floor(z / 16.0f));
+
+    int localX = x - chunkX * 16;
+    int localZ = z - chunkZ * 16;
+
+    glm::ivec2 chunkCoord(chunkX, chunkZ);
+
+    {
+        std::lock_guard lock(chunksMutex);
+
+        auto it = chunks.find(chunkCoord);
+
+        if (it == chunks.end()) {
+            std::cout << "setBlock: chunk does not exist: " << chunkX << ", "
+                      << chunkZ << '\n';
+            return;
+        }
+
+        it->second->setBlock({localX, y, localZ}, block);
+    }
+
+    generateMesh(chunkCoord);
+}
+
 Block World::getBlockCPU(Chunk &chunk, glm::ivec3 position) {
     auto x = position.x;
     auto y = position.y;
@@ -180,6 +212,7 @@ void World::generateMesh(glm::ivec2 position) {
         return;
 
     Chunk *chunk = it->second.get();
+    chunk->clearMesh();
 
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 256; j++) {

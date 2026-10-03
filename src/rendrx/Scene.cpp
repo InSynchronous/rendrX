@@ -3,6 +3,8 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <cstdlib>
+#include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <iostream>
 #include <memory>
 
@@ -495,6 +497,8 @@ void Scene::render() {
     fpsTimer += deltaTime;
     frameCount++;
 
+    glfwPollEvents();
+
     if (fpsTimer >= 1.0f) {
         fps = frameCount / fpsTimer;
 
@@ -568,6 +572,16 @@ void Scene::render() {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    // Foward vector
+    Ray ray = {cameraPos, direction};
+    Hit hit = raycast(ray, 8.0f); // reach
+
+    if (hit.hit &&
+        (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)) {
+
+        world->setBlock(hit.block, Block::AIR);
     }
 
     // Matricies
@@ -714,3 +728,91 @@ void Scene::render() {
 }
 
 bool Scene::shouldClose() { return glfwWindowShouldClose(this->window); }
+
+Hit Scene::raycast(Ray &r, float maxDistance) {
+    Hit result;
+
+    glm::vec3 rayDirection = glm::normalize(r.direction);
+    glm::vec3 origin = r.origin;
+    glm::ivec3 voxel = glm::ivec3(glm::floor(origin));
+
+    glm::ivec3 step;
+
+    step.x = rayDirection.x >= 0.0f ? 1 : -1;
+    step.y = rayDirection.y >= 0.0f ? 1 : -1;
+    step.z = rayDirection.z >= 0.0f ? 1 : -1;
+
+    glm::vec3 tDelta;
+
+    tDelta.x = rayDirection.x != 0.0f ? std::abs(1.0f / rayDirection.x)
+                                      : std::numeric_limits<float>::infinity();
+
+    tDelta.y = rayDirection.y != 0.0f ? std::abs(1.0f / rayDirection.y)
+                                      : std::numeric_limits<float>::infinity();
+
+    tDelta.z = rayDirection.z != 0.0f ? std::abs(1.0f / rayDirection.z)
+                                      : std::numeric_limits<float>::infinity();
+
+    glm::vec3 nextBoundary;
+
+    nextBoundary.x = rayDirection.x >= 0.0f ? voxel.x + 1.0f : voxel.x;
+
+    nextBoundary.y = rayDirection.y >= 0.0f ? voxel.y + 1.0f : voxel.y;
+
+    nextBoundary.z = rayDirection.z >= 0.0f ? voxel.z + 1.0f : voxel.z;
+
+    glm::vec3 tMax;
+
+    tMax.x = rayDirection.x != 0.0f
+                 ? (nextBoundary.x - origin.x) / rayDirection.x
+                 : std::numeric_limits<float>::infinity();
+
+    tMax.y = rayDirection.y != 0.0f
+                 ? (nextBoundary.y - origin.y) / rayDirection.y
+                 : std::numeric_limits<float>::infinity();
+
+    tMax.z = rayDirection.z != 0.0f
+                 ? (nextBoundary.z - origin.z) / rayDirection.z
+                 : std::numeric_limits<float>::infinity();
+
+    glm::ivec3 hitNormal(0);
+    float distance = 0.0f;
+
+    while (distance <= maxDistance) {
+
+        if (world->getBlock(voxel) != Block::AIR) {
+            result.hit = true;
+            result.block = voxel;
+            result.normal = hitNormal;
+            result.distance = distance;
+            return result;
+        }
+
+        if (tMax.x <= tMax.y && tMax.x <= tMax.z) {
+
+            voxel.x += step.x;
+            distance = tMax.x;
+            tMax.x += tDelta.x;
+
+            hitNormal = glm::ivec3(-step.x, 0, 0);
+
+        } else if (tMax.y <= tMax.z) {
+
+            voxel.y += step.y;
+            distance = tMax.y;
+            tMax.y += tDelta.y;
+
+            hitNormal = glm::ivec3(0, -step.y, 0);
+
+        } else {
+
+            voxel.z += step.z;
+            distance = tMax.z;
+            tMax.z += tDelta.z;
+
+            hitNormal = glm::ivec3(0, 0, -step.z);
+        }
+    }
+
+    return result;
+}

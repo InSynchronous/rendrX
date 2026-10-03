@@ -72,6 +72,7 @@ class World {
     void runAllTasks();
     void generateMesh(glm::ivec2 position);
     void generateMeshCPU(std::unique_ptr<Chunk> &chunk);
+    void setBlock(glm::vec3 position, Block block);
     Block getBlock(glm::vec3 position);
     Block getBlockCPU(Chunk &chunk, glm::ivec3 position);
 };

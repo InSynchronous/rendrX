@@ -804,3 +804,13 @@ It seems glfwGetFramebuffer's return value changed. Idk how to figure it out tho
 
 I just decided to use glViewPort and forcefully resized the window. Let me make this code
 also not use hardcoded numbers and use a proper variable.
+
+### Mining blocks
+I need to program the actual gameplay of minecraft now lol. I need to always know the block infront of me via raycast.
+First lets make sure i have a worldwide block finder.
+
+I got the DDA algo to work, its kinda laggy though. Should optimize the getBlock function fr. It does work though.
+Lets try to get block breaking too work.
+
+this took a while of debugging. but basically the loop has to find the chunk, find the block in the chunk, change it,
+then clear the vertecies, regenerate them, and push to screen. Works amazing.
