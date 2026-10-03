@@ -137,6 +137,11 @@ class Scene {
     
         uniform vec3 sunDirection;
         uniform vec3 sunLight;
+
+        uniform float fogStart;
+        uniform float fogEnd;
+        uniform vec3 fogColor;
+        uniform vec3 cameraPosition;
     
         void main()
         {
@@ -160,9 +165,20 @@ class Scene {
             vec3 lighting =
                 ambient +
                 sunAmount * sunLight;
+
+
+            float distanceToCamera = length(position - cameraPosition);
+
+            float fogFactor = clamp(
+                (distanceToCamera - fogStart) / (fogEnd - fogStart),
+                0.0,
+                1.0
+            );
+
+            vec3 final = mix(albedo*lighting, fogColor, fogFactor);
     
             FragColor = vec4(
-                albedo*lighting,
+                final,
                 1.0
             );
         }

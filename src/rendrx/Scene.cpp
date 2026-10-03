@@ -185,6 +185,19 @@ void Scene::init() {
 
     glUniform3f(groundLightLoc, 0.20f, 0.23f, 0.27f);
 
+    // fog
+    glm::vec3 fogColor(0.55f, 0.65f, 0.75f);
+
+    glUniform3f(glGetUniformLocation(lightingShader, "fogColor"), fogColor.x,
+                fogColor.y, fogColor.z);
+
+    glUniform1f(glGetUniformLocation(lightingShader, "fogStart"), 150.0f);
+
+    glUniform1f(glGetUniformLocation(lightingShader, "fogEnd"), 500.0f);
+
+    glUniform3f(glGetUniformLocation(lightingShader, "cameraPosition"),
+                cameraPos.x, cameraPos.y, cameraPos.z);
+
     // projection
     modelLocation = glGetUniformLocation(geometryShader, "model");
 
@@ -522,8 +535,10 @@ void Scene::render() {
     GLint gNormalUniform = glGetUniformLocation(lightingShader, "gNormal");
 
     GLint gAlbedoUniform = glGetUniformLocation(lightingShader, "gAlbedo");
+    GLint cameraPositionLoc =
+        glGetUniformLocation(lightingShader, "cameraPosition");
 
-    glUseProgram(lightingShader);
+    glUniform3f(cameraPositionLoc, cameraPos.x, cameraPos.y, cameraPos.z);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gPositionLoc);

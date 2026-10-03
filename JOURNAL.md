@@ -734,3 +734,7 @@ Weird ahh bugs:
 
 YES! It works. This took so long. this took way longer than 58m but hackatime broke.
 
+### bring back fog
+Let's bring back fog. Shouldn't be too hard. I added it back. Also added camerapos as a uniform.
+
+This code is quite messy, a refactor is due eventually.
