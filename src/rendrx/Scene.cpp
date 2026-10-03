@@ -314,7 +314,7 @@ void Scene::init() {
     glGenTextures(1, &shadowMap);
     glBindTexture(GL_TEXTURE_2D, shadowMap);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 2048, 2048, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 1024, 1024, 0,
                  GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -577,29 +577,31 @@ void Scene::render() {
                                             500.0f               // far
     );
 
+    glm::mat4 viewProjection = projection * view;
+
     // pass 0
     glm::vec3 sunDirection = glm::normalize(glm::vec3(0.4f, 1.0f, 0.3f));
 
-    glm::vec3 lightPos = cameraPos + sunDirection * 300.0f;
+    glm::vec3 lightPos = cameraPos + sunDirection * 200.0f;
 
     glm::mat4 lightView =
         glm::lookAt(lightPos, cameraPos, glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::mat4 lightProjection =
-        glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, 1.0f, 1000.0f);
-
+        glm::ortho(-120.0f, 120.0f, -120.0f, 120.0f, 1.0f, 400.0f);
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
 
-    glViewport(0, 0, 2048, 2048);
+    glViewport(0, 0, 1024, 1024);
 
     // IMPORTANT
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
 
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
 
     glClearDepth(1.0);
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -616,6 +618,8 @@ void Scene::render() {
     }
 
     // pass 1
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     glViewport(0, 0, 1280, 720);
 
     glBindFramebuffer(GL_FRAMEBUFFER, gBufferLoc);
@@ -636,6 +640,8 @@ void Scene::render() {
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, &projection[0][0]);
 
     for (auto &[position, chunk] : world->chunks) {
+        if (!isChunkVisible(position, viewProjection))
+            continue;
         chunk->draw();
     }
 

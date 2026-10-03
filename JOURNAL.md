@@ -743,3 +743,12 @@ This code is quite messy, a refactor is due eventually.
 All i know about this is we have to render another depth buffer from the sun's perspective. 
 This took like 2 hours. I got pretty far, but its bugged, 20 fps, and is at the wrong angle.
 Gn
+
+### headache over
+medicine is a magical thing. lets get back to work. this code is pure slop; clulprit imo is probably the lack of culling.
+Turned on culling for both shadow maps and geometry maps, and also reduced shadow map size to 1024.
+
+![render](images/working.png)
+
+## October 3rd, 2026
+Let's try to improve FPS and shadow quality.
