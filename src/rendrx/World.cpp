@@ -157,6 +157,14 @@ Block World::getBlock(glm::vec3 position) {
     }
 }
 
+void World::regenerateChunk(glm::ivec2 coord) {
+    auto it = chunks.find(coord);
+    if (it == chunks.end())
+        return;
+
+    generateMesh(coord);
+}
+
 void World::setBlock(glm::vec3 position, Block block) {
     int x = static_cast<int>(std::floor(position.x));
     int z = static_cast<int>(std::floor(position.z));
@@ -184,7 +192,19 @@ void World::setBlock(glm::vec3 position, Block block) {
         it->second->setBlock({localX, y, localZ}, block);
     }
 
-    generateMesh(chunkCoord);
+    regenerateChunk(chunkCoord);
+
+    if (localX == 0)
+        regenerateChunk({chunkX - 1, chunkZ});
+
+    if (localX == 15)
+        regenerateChunk({chunkX + 1, chunkZ});
+
+    if (localZ == 0)
+        regenerateChunk({chunkX, chunkZ - 1});
+
+    if (localZ == 15)
+        regenerateChunk({chunkX, chunkZ + 1});
 }
 
 Block World::getBlockCPU(Chunk &chunk, glm::ivec3 position) {

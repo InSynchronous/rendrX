@@ -41,6 +41,7 @@ class World {
     Generation generation;
 
     void generationLoop();
+    void regenerateChunk(glm::ivec2 coord);
 
     friend class Scene;
 
