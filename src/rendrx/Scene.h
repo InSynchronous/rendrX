@@ -344,6 +344,32 @@ class Scene {
     bool isChunkVisible(glm::ivec2 chunkPos, const glm::mat4 &viewProjection);
 
     Hit raycast(Ray &r, float maxDistance);
+    Block selectedBlock = Block::BRICK;
+
+    double lastMouseX = 0.0;
+    double lastMouseY = 0.0;
+    bool firstMouse = true;
+    bool rightMouseWasDown = false;
+    static void mouseCallback(GLFWwindow *window, double xpos, double ypos) {
+        Scene *scene = static_cast<Scene *>(glfwGetWindowUserPointer(window));
+
+        static double lastX = xpos;
+        static double lastY = ypos;
+
+        double dx = xpos - lastX;
+        double dy = ypos - lastY;
+
+        lastX = xpos;
+        lastY = ypos;
+
+        const float sensitivity = 0.1f;
+
+        scene->cameraRot.z += dx * sensitivity;
+        scene->cameraRot.x -= dy * sensitivity;
+
+        // Prevent looking completely upside down
+        scene->cameraRot.x = glm::clamp(scene->cameraRot.x, -89.0f, 89.0f);
+    }
 
   public:
     Scene();

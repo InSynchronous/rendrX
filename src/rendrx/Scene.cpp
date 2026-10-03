@@ -28,6 +28,13 @@ Scene::Scene() {
     if (!window) {
         std::cerr << "Failed to create GLFW window, aborting!" << std::endl;
     }
+
+    // mousy mousie
+    glfwSetWindowUserPointer(window, this);
+    glfwSetCursorPosCallback(window, mouseCallback);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     glfwMakeContextCurrent(window);
 
     if (!gladLoadGL(glfwGetProcAddress)) {
@@ -675,10 +682,32 @@ void Scene::render() {
         cameraPos.y -= movement;
     }
 
-    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    } else {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        selectedBlock = Block::GRASS;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        selectedBlock = Block::DIRT;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+        selectedBlock = Block::STONE;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+        selectedBlock = Block::SAND;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
+        selectedBlock = Block::PLANK;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
+        selectedBlock = Block::BRICK;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_7) == GLFW_PRESS) {
+        selectedBlock = Block::LOG;
     }
 
     // Foward vector
@@ -718,13 +747,18 @@ void Scene::render() {
 
         world->setBlock(hit.block, Block::AIR);
     }
-    if (hit.hit &&
-        (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)) {
+
+    bool rightMouseDown =
+        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+
+    if (hit.hit && rightMouseDown && !rightMouseWasDown) {
         glm::ivec3 location = hit.block;
-        location =
-            location + hit.normal; // facing outwards perpendicular kinda thing
-        world->setBlock(location, Block::STONE);
+        location += hit.normal;
+
+        world->setBlock(location, selectedBlock);
     }
+
+    rightMouseWasDown = rightMouseDown;
 
     glm::mat4 viewProjection = projection * view;
 

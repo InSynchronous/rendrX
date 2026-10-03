@@ -828,3 +828,14 @@ This is the same thing as mining just placing. just do hit.pos+hit.normal
 
 There was a crosshairr misalignment bug where it wouldnt break/plaace on the crrosshair. it was because i was using floor, when
 the system used 0.5 units for blocks. easy rework.
+
+### wrap it up unc
+I don't reallyy care much about ts no more. I just want this project done.
+
+I added many more blocks and a block picker using number keys 0-9. Let's also now use the mouse to move the camera.
+To do this, I used a callback, also this will help make sure only one block is placed per press instead of spam.
+
+It works great, now to solve the one block per press issue.
+
+Now for a readme polish and im outa here. 
+And a linux build (appimage prob).

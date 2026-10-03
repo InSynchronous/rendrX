@@ -5,11 +5,11 @@
 #include <glm/glm.hpp>
 
 namespace rendrx {
-enum class Block { AIR, GRASS, DIRT, STONE, SAND };
+enum class Block { AIR, GRASS, DIRT, STONE, SAND, PLANK, BRICK, LOG };
 enum class Face { FRONT, BACK, LEFT, RIGHT, TOP, BOTTOM };
 
-// 5 Blocks, 6 Faces, UV coord set
-constexpr std::array<std::array<UV, 6>, 5> blockToUV{
+// 8 Blocks, 6 Faces, UV coord set
+constexpr std::array<std::array<UV, 6>, 8> blockToUV{
     {{{
          getUV({3, 15}), // front
          getUV({3, 15}), // back
@@ -49,5 +49,29 @@ constexpr std::array<std::array<UV, 6>, 5> blockToUV{
          getUV({0, 4}), // right
          getUV({0, 4}), // top
          getUV({0, 4})  // bottom
+     }},
+     {{
+         getUV({4, 15}), // front
+         getUV({4, 15}), // back
+         getUV({4, 15}), // left
+         getUV({4, 15}), // right
+         getUV({4, 15}), // top
+         getUV({4, 15})  // bottom
+     }},
+     {{
+         getUV({7, 15}), // front
+         getUV({7, 15}), // back
+         getUV({7, 15}), // left
+         getUV({7, 15}), // right
+         getUV({7, 15}), // top
+         getUV({7, 15})  // bottom
+     }},
+     {{
+         getUV({4, 14}), // front
+         getUV({4, 14}), // back
+         getUV({4, 14}), // left
+         getUV({4, 14}), // right
+         getUV({5, 14}), // top
+         getUV({5, 14})  // bottom
      }}}};
 } // namespace rendrx
