@@ -12,7 +12,9 @@ namespace rendrx {
 class Scene {
   private:
     GLFWwindow *window;
-    unsigned int vertexShader, fragmentShader, shaderProgram, texture;
+    unsigned int geometryVertexShader, geometryFragmentShader,
+        lightingFragmentShader, lightingVertexShader, lightingShader,
+        geometryShader, texture, fullscreenVAO;
     GLint modelLocation;
     GLint viewLocation;
     GLint projectionLocation;
@@ -21,6 +23,13 @@ class Scene {
     GLint skyLightLoc;
     GLint sunDirectionLoc;
     GLint sunLightLoc;
+
+    // Buffers
+    GLuint gBufferLoc;
+    GLuint gPositionLoc;
+    GLuint gNormalLoc;
+    GLuint gDepthLoc;
+    GLuint gAlbedoLoc;
 
     float deltaTime;
     float lastFrame;
@@ -38,27 +47,51 @@ class Scene {
        Vertex shader I wrote. takes in a vector3 of a vertex's position, returns
        the same thing.
     */
-    const char *vertexShaderSource = R"(
+    const char *geometryVertexShaderSource = R"(
         #version 330 core
+    
         layout (location = 0) in vec3 vertData;
         layout (location = 1) in vec2 uvData;
         layout (location = 2) in vec3 normalData;
     
         out vec2 uvCoord;
-        out float fogDistance;
+        out vec3 fragPosition;
         out vec3 normalCoord;
     
         uniform mat4 model;
         uniform mat4 view;
         uniform mat4 projection;
-        void main() {
-            vec4 viewPos = view * model * vec4(vertData, 1.0);
-            gl_Position = projection * viewPos;
-
+    
+        void main()
+        {
+            vec4 worldPos = model * vec4(vertData, 1.0);
+    
+            fragPosition = worldPos.xyz;
             uvCoord = uvData;
             normalCoord = normalData;
+    
+            gl_Position = projection * view * worldPos;
+        }
+    )";
 
-            fogDistance = length(viewPos.xyz);
+    const char *lightingVertexShaderSource = R"(
+        #version 330 core
+    
+        out vec2 uv;
+    
+        void main()
+        {
+            vec2 positions[3] = vec2[](
+                vec2(-1.0, -1.0),
+                vec2( 3.0, -1.0),
+                vec2(-1.0,  3.0)
+            );
+    
+            vec2 position = positions[gl_VertexID];
+    
+            uv = position * 0.5 + 0.5;
+    
+            gl_Position = vec4(position, 0.0, 1.0);
         }
     )";
 
@@ -67,44 +100,70 @@ class Scene {
     returns texture lookup result
     */
 
-    const char *fragmentShaderSource = R"(
+    const char *geometryFragmentShaderSource = R"(
         #version 330 core
-
+    
         in vec2 uvCoord;
-        in float fogDistance;
+        in vec3 fragPosition;
         in vec3 normalCoord;
     
-        out vec4 FragColor;
-         
+        layout (location = 0) out vec3 gPosition;
+        layout (location = 1) out vec3 gNormal;
+        layout (location = 2) out vec4 gAlbedo;
+    
         uniform sampler2D texture1;
-         
+    
+        void main()
+        {
+            gPosition = fragPosition;
+            gNormal = normalize(normalCoord);
+            gAlbedo = texture(texture1, uvCoord);
+        }
+    )";
+
+    const char *lightingFragmentShaderSource = R"(
+        #version 330 core
+    
+        in vec2 uv;
+    
+        out vec4 FragColor;
+    
+        uniform sampler2D gPosition;
+        uniform sampler2D gNormal;
+        uniform sampler2D gAlbedo;
+    
         uniform vec3 skyLight;
         uniform vec3 groundLight;
-
+    
         uniform vec3 sunDirection;
         uniform vec3 sunLight;
-         
-        void main() {
-            vec4 textureOut = texture(texture1, uvCoord);
-         
-            float hemisphere = normalCoord.y * 0.5 + 0.5;
-
+    
+        void main()
+        {
+            vec3 position = texture(gPosition, uv).rgb;
+            vec3 normal = normalize(texture(gNormal, uv).rgb);
+            vec3 albedo = texture(gAlbedo, uv).rgb;
+    
+            float hemisphere = normal.y * 0.5 + 0.5;
+    
             float sunAmount = max(
-                dot(normalize(normalCoord), normalize(sunDirection)),
+                dot(normal, normalize(sunDirection)),
                 0.0
             );
-
+    
             vec3 ambient = mix(
                 groundLight,
                 skyLight,
                 hemisphere
             );
-
-            vec3 lighting = ambient + sunAmount * sunLight;
-         
+    
+            vec3 lighting =
+                ambient +
+                sunAmount * sunLight;
+    
             FragColor = vec4(
-                textureOut.rgb * lighting,
-                textureOut.a
+                albedo*lighting,
+                1.0
             );
         }
     )";

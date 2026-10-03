@@ -717,3 +717,20 @@ These fragment shader bugs are mad annoying. I'd really like to be able to have 
 I got wrong. Hemispherical lighting is cool, but not cool enough. I added a sun direction input into the fragment shader, passed it
 in from the cpu. Lets see what I can code up. I added a sun that takes in sunLight and sunDirection, using dot product products.
 After changin the specs it should work.
+
+
+Uhh wtf hackatime just forgot the entire hour of work i just put in. 
+
+### differed rendering
+lets render a normal image and a depth image to a texture and then use that instead, also makes gl_depth test work better without expensive
+lighting calcs being wasted on obstructed pixels.
+
+I didn't jounal much but its getting really complex. This needs refactoring.
+
+Weird ahh bugs:
+![depthbuffer showing not rendering](images/depthy.png)
+![idk](images/huh.png)
+
+
+YES! It works. This took so long. this took way longer than 58m but hackatime broke.
+

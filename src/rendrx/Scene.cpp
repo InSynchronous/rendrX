@@ -34,90 +34,148 @@ Scene::Scene() {
 void Scene::init() {
     // Compile the shaders at runtime
     // idk bout how ur supposed to do it in prod yet
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
+    geometryVertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(geometryVertexShader, 1, &geometryVertexShaderSource, NULL);
+    glCompileShader(geometryVertexShader);
 
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
+    geometryFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(geometryFragmentShader, 1, &geometryFragmentShaderSource,
+                   NULL);
+    glCompileShader(geometryFragmentShader);
 
-    shaderProgram = glCreateProgram();
+    geometryShader = glCreateProgram();
 
-    if (shaderProgram == 0) {
+    if (geometryShader == 0) {
         std::cerr << "[Shader] ERROR: Failed to create shader program.\n";
         std::exit(-1);
     } else {
-        std::cout << "[Shader] Created shader program. ID: " << shaderProgram
+        std::cout << "[Shader] Created shader program. ID: " << geometryShader
                   << '\n';
     }
 
-    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(geometryShader, geometryVertexShader);
 
     if (glGetError() != GL_NO_ERROR) {
         std::cerr << "[Shader] ERROR: Failed to attach vertex shader. ID: "
-                  << vertexShader << '\n';
+                  << geometryVertexShader << '\n';
         std::exit(-1);
 
     } else {
-        std::cout << "[Shader] Attached vertex shader. ID: " << vertexShader
-                  << '\n';
+        std::cout << "[Shader] Attached vertex shader. ID: "
+                  << geometryVertexShader << '\n';
     }
 
-    glAttachShader(shaderProgram, fragmentShader);
+    glAttachShader(geometryShader, geometryFragmentShader);
 
     if (glGetError() != GL_NO_ERROR) {
         std::cerr << "[Shader] ERROR: Failed to attach fragment shader. ID: "
-                  << fragmentShader << '\n';
+                  << geometryFragmentShader << '\n';
         std::exit(-1);
 
     } else {
-        std::cout << "[Shader] Attached fragment shader. ID: " << fragmentShader
-                  << '\n';
+        std::cout << "[Shader] Attached fragment shader. ID: "
+                  << geometryFragmentShader << '\n';
     }
 
-    std::cout << "[Shader] Linking program " << shaderProgram << "...\n";
+    std::cout << "[Shader] Linking program " << geometryShader << "...\n";
 
-    glLinkProgram(shaderProgram);
+    glLinkProgram(geometryShader);
 
     GLint success = GL_FALSE;
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    glGetProgramiv(geometryShader, GL_LINK_STATUS, &success);
 
     if (!success) {
         char infoLog[1024];
-        glGetProgramInfoLog(shaderProgram, sizeof(infoLog), nullptr, infoLog);
+        glGetProgramInfoLog(geometryShader, sizeof(infoLog), nullptr, infoLog);
 
         std::cerr << "[Shader] Program linking FAILED.\n";
-        std::cerr << "[Shader] Program ID: " << shaderProgram << '\n';
+        std::cerr << "[Shader] Program ID: " << geometryShader << '\n';
         std::cerr << "[Shader] Linker log:\n" << infoLog << '\n';
         std::exit(-1);
 
     } else {
         std::cout << "[Shader] Program linked successfully.\n";
-        std::cout << "[Shader] Program ID: " << shaderProgram << '\n';
+        std::cout << "[Shader] Program ID: " << geometryShader << '\n';
     }
 
-    glUseProgram(shaderProgram);
+    // same shi again, copy paste
+    lightingVertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(lightingVertexShader, 1, &lightingVertexShaderSource, NULL);
+    glCompileShader(lightingVertexShader);
 
-    // Fog
-    glUniform3f(glGetUniformLocation(shaderProgram, "fogColor"), 0.6f, 0.7f,
-                0.8f);
+    lightingFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(lightingFragmentShader, 1, &lightingFragmentShaderSource,
+                   NULL);
+    glCompileShader(lightingFragmentShader);
 
-    glUniform1f(glGetUniformLocation(shaderProgram, "fogStart"), 100.0f);
+    lightingShader = glCreateProgram();
 
-    glUniform1f(glGetUniformLocation(shaderProgram, "fogEnd"), 200.0f);
+    if (lightingShader == 0) {
+        std::cerr << "[Shader] ERROR: Failed to create shader program.\n";
+        std::exit(-1);
+    } else {
+        std::cout << "[Shader] Created shader program. ID: " << lightingShader
+                  << '\n';
+    }
+
+    glAttachShader(lightingShader, lightingVertexShader);
+
+    if (glGetError() != GL_NO_ERROR) {
+        std::cerr << "[Shader] ERROR: Failed to attach vertex shader. ID: "
+                  << lightingVertexShader << '\n';
+        std::exit(-1);
+
+    } else {
+        std::cout << "[Shader] Attached vertex shader. ID: "
+                  << lightingVertexShader << '\n';
+    }
+
+    glAttachShader(lightingShader, lightingFragmentShader);
+
+    if (glGetError() != GL_NO_ERROR) {
+        std::cerr << "[Shader] ERROR: Failed to attach fragment shader. ID: "
+                  << lightingFragmentShader << '\n';
+        std::exit(-1);
+
+    } else {
+        std::cout << "[Shader] Attached fragment shader. ID: "
+                  << lightingFragmentShader << '\n';
+    }
+
+    std::cout << "[Shader] Linking program " << lightingShader << "...\n";
+
+    glLinkProgram(lightingShader);
+
+    success = GL_FALSE;
+    glGetProgramiv(lightingShader, GL_LINK_STATUS, &success);
+
+    if (!success) {
+        char infoLog[1024];
+        glGetProgramInfoLog(lightingShader, sizeof(infoLog), nullptr, infoLog);
+
+        std::cerr << "[Shader] Program linking FAILED.\n";
+        std::cerr << "[Shader] Program ID: " << lightingShader << '\n';
+        std::cerr << "[Shader] Linker log:\n" << infoLog << '\n';
+        std::exit(-1);
+
+    } else {
+        std::cout << "[Shader] Program linked successfully.\n";
+        std::cout << "[Shader] Program ID: " << lightingShader << '\n';
+    }
+
+    glUseProgram(lightingShader);
 
     // Lighting
-    skyLightLoc = glGetUniformLocation(shaderProgram, "skyLight");
-    sunDirectionLoc = glGetUniformLocation(shaderProgram, "sunDirection");
-    sunLightLoc = glGetUniformLocation(shaderProgram, "sunLight");
-    groundLightLoc = glGetUniformLocation(shaderProgram, "groundLight");
+    skyLightLoc = glGetUniformLocation(lightingShader, "skyLight");
+    sunDirectionLoc = glGetUniformLocation(lightingShader, "sunDirection");
+    sunLightLoc = glGetUniformLocation(lightingShader, "sunLight");
+    groundLightLoc = glGetUniformLocation(lightingShader, "groundLight");
 
     glm::vec3 sunDirection = glm::normalize(glm::vec3(0.4f, 1.0f, 0.3f));
 
     glm::vec3 sunLight(0.45f, 0.42f, 0.36f);
 
-    glUniform3f(glGetUniformLocation(shaderProgram, "sunLight"), sunLight.x,
+    glUniform3f(glGetUniformLocation(lightingShader, "sunLight"), sunLight.x,
                 sunLight.y, sunLight.z);
 
     glUniform3f(skyLightLoc, 0.65f, 0.68f, 0.72f);
@@ -126,15 +184,84 @@ void Scene::init() {
                 sunDirection.z);
 
     glUniform3f(groundLightLoc, 0.20f, 0.23f, 0.27f);
+
     // projection
-    modelLocation = glGetUniformLocation(shaderProgram, "model");
+    modelLocation = glGetUniformLocation(geometryShader, "model");
 
-    viewLocation = glGetUniformLocation(shaderProgram, "view");
+    viewLocation = glGetUniformLocation(geometryShader, "view");
 
-    projectionLocation = glGetUniformLocation(shaderProgram, "projection");
+    projectionLocation = glGetUniformLocation(geometryShader, "projection");
+
+    // Differed rendering
+    glGenVertexArrays(1, &fullscreenVAO);
+    glGenFramebuffers(1, &gBufferLoc);
+    glBindFramebuffer(GL_FRAMEBUFFER, gBufferLoc);
+
+    glGenTextures(1, &gPositionLoc);
+    glBindTexture(GL_TEXTURE_2D, gPositionLoc);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 1280, 720, 0, GL_RGB, GL_FLOAT,
+                 nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           gPositionLoc, 0);
+
+    glGenTextures(1, &gNormalLoc);
+    glBindTexture(GL_TEXTURE_2D, gNormalLoc);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 1280, 720, 0, GL_RGB, GL_FLOAT,
+                 nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D,
+                           gNormalLoc, 0);
+
+    glGenTextures(1, &gDepthLoc);
+    glBindTexture(GL_TEXTURE_2D, gDepthLoc);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 1280, 720, 0,
+                 GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+    glGenTextures(1, &gAlbedoLoc);
+    glBindTexture(GL_TEXTURE_2D, gAlbedoLoc);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1280, 720, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D,
+                           gAlbedoLoc, 0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           gDepthLoc, 0);
+
+    // Generate once in initalization
+    GLuint attachments[] = {
+        GL_COLOR_ATTACHMENT0,
+        GL_COLOR_ATTACHMENT1,
+        GL_COLOR_ATTACHMENT2,
+    };
+
+    glDrawBuffers(3, attachments);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "[GBuffer] ERROR: Framebuffer is not complete!\n";
+        std::exit(-1);
+    }
+
+    // unbind
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Init stuff
-
     glEnable(GL_DEPTH_TEST);
 
     glClearColor(0.1, 0.2, 0.3, 1.0);
@@ -171,9 +298,9 @@ void Scene::loadTextures() {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 
-    glUseProgram(shaderProgram);
+    glUseProgram(geometryShader);
 
-    int textureLocation = glGetUniformLocation(shaderProgram, "texture1");
+    int textureLocation = glGetUniformLocation(geometryShader, "texture1");
 
     glUniform1i(textureLocation, 0);
 
@@ -347,17 +474,23 @@ void Scene::render() {
     );
 
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), // FOV
-                                            1280.0f / 800.0f,    // aspect ratio
+                                            1280.0f / 720.0f,    // aspect ratio
                                             0.1f,                // near
                                             500.0f               // far
     );
 
     glm::mat4 viewProjection = projection * view;
 
+    glBindFramebuffer(GL_FRAMEBUFFER, gBufferLoc);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // configure matricies
-    glUseProgram(shaderProgram);
+    glEnable(GL_DEPTH_TEST);
+
+    glUseProgram(geometryShader);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
     glUniformMatrix4fv(modelLocation, 1, GL_FALSE, &model[0][0]);
 
@@ -366,11 +499,47 @@ void Scene::render() {
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, &projection[0][0]);
 
     for (auto &[position, chunk] : world->chunks) {
+
         if (!isChunkVisible(position, viewProjection)) {
             continue;
         }
+
         chunk->draw();
     }
+
+    // PASS #2, fancy shaders
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glDisable(GL_DEPTH_TEST);
+
+    glUseProgram(lightingShader); // now use fancy lighting shaders
+
+    GLint gPositionUniform = glGetUniformLocation(lightingShader, "gPosition");
+
+    GLint gNormalUniform = glGetUniformLocation(lightingShader, "gNormal");
+
+    GLint gAlbedoUniform = glGetUniformLocation(lightingShader, "gAlbedo");
+
+    glUseProgram(lightingShader);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gPositionLoc);
+    glUniform1i(gPositionUniform, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gNormalLoc);
+    glUniform1i(gNormalUniform, 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gAlbedoLoc);
+    glUniform1i(gAlbedoUniform, 2);
+
+    glBindVertexArray(fullscreenVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
