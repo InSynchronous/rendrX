@@ -99,6 +99,7 @@ void Scene::init() {
 
     glUseProgram(shaderProgram);
 
+    // Fog
     glUniform3f(glGetUniformLocation(shaderProgram, "fogColor"), 0.6f, 0.7f,
                 0.8f);
 
@@ -106,12 +107,33 @@ void Scene::init() {
 
     glUniform1f(glGetUniformLocation(shaderProgram, "fogEnd"), 200.0f);
 
-    // init
+    // Lighting
+    skyLightLoc = glGetUniformLocation(shaderProgram, "skyLight");
+    sunDirectionLoc = glGetUniformLocation(shaderProgram, "sunDirection");
+    sunLightLoc = glGetUniformLocation(shaderProgram, "sunLight");
+    groundLightLoc = glGetUniformLocation(shaderProgram, "groundLight");
+
+    glm::vec3 sunDirection = glm::normalize(glm::vec3(0.4f, 1.0f, 0.3f));
+
+    glm::vec3 sunLight(0.45f, 0.42f, 0.36f);
+
+    glUniform3f(glGetUniformLocation(shaderProgram, "sunLight"), sunLight.x,
+                sunLight.y, sunLight.z);
+
+    glUniform3f(skyLightLoc, 0.65f, 0.68f, 0.72f);
+
+    glUniform3f(sunDirectionLoc, sunDirection.x, sunDirection.y,
+                sunDirection.z);
+
+    glUniform3f(groundLightLoc, 0.20f, 0.23f, 0.27f);
+    // projection
     modelLocation = glGetUniformLocation(shaderProgram, "model");
 
     viewLocation = glGetUniformLocation(shaderProgram, "view");
 
     projectionLocation = glGetUniformLocation(shaderProgram, "projection");
+
+    // Init stuff
 
     glEnable(GL_DEPTH_TEST);
 

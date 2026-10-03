@@ -17,6 +17,11 @@ class Scene {
     GLint viewLocation;
     GLint projectionLocation;
 
+    GLint groundLightLoc;
+    GLint skyLightLoc;
+    GLint sunDirectionLoc;
+    GLint sunLightLoc;
+
     float deltaTime;
     float lastFrame;
 
@@ -64,40 +69,44 @@ class Scene {
 
     const char *fragmentShaderSource = R"(
         #version 330 core
-    
+
         in vec2 uvCoord;
         in float fogDistance;
         in vec3 normalCoord;
-
+    
         out vec4 FragColor;
-    
+         
         uniform sampler2D texture1;
-        
-        uniform vec3 fogColor;
-        uniform float fogStart;
-        uniform float fogEnd;
+         
+        uniform vec3 skyLight;
+        uniform vec3 groundLight;
 
-        void main() {
-            FragColor = vec4(normalize(normalCoord) * 0.5 + 0.5, 1.0);
-        }
-    
-        /*
+        uniform vec3 sunDirection;
+        uniform vec3 sunLight;
+         
         void main() {
             vec4 textureOut = texture(texture1, uvCoord);
-            float fogFactor = smoothstep(
-                fogStart,
-                fogEnd,
-                fogDistance
+         
+            float hemisphere = normalCoord.y * 0.5 + 0.5;
+
+            float sunAmount = max(
+                dot(normalize(normalCoord), normalize(sunDirection)),
+                0.0
             );
 
-            FragColor = mix(
-                textureOut,
-                vec4(fogColor, 1.0),
-                fogFactor
+            vec3 ambient = mix(
+                groundLight,
+                skyLight,
+                hemisphere
             );
 
+            vec3 lighting = ambient + sunAmount * sunLight;
+         
+            FragColor = vec4(
+                textureOut.rgb * lighting,
+                textureOut.a
+            );
         }
-        */
     )";
 
     void init();

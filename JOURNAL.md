@@ -707,3 +707,13 @@ I forgot to change the stride(increment) from 5 floats to 8 floats. It works now
 Looks beautiful. Should probably screenshot ts more lol.
 
 ![normals being rendered as color](images/normality.png)
+
+Ok let's continue. dot product of two vectors divided by their magnitudes multiplied together = cos of the angle between them.
+You could run arccos() on the left hand side, but genuinely that does nothing much of importance, and is a wasteful
+calculation. But since we have some number that scales from low to high depending on how close to perpendicular something is, 
+we can scale lighting.
+
+These fragment shader bugs are mad annoying. I'd really like to be able to have an LSP tell me how many idiotic semicolons/misepllings
+I got wrong. Hemispherical lighting is cool, but not cool enough. I added a sun direction input into the fragment shader, passed it
+in from the cpu. Lets see what I can code up. I added a sun that takes in sunLight and sunDirection, using dot product products.
+After changin the specs it should work.
