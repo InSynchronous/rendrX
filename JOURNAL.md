@@ -822,3 +822,9 @@ i should probablyy abstract shader code into a class so it can be re-used but im
 
 This took a while, but basically i pass the screen size as a uniform to the shader, and then just scale it so its
 aways 20x20 px in size. it looks pretty nice imo.
+
+### place blocks
+This is the same thing as mining just placing. just do hit.pos+hit.normal
+
+There was a crosshairr misalignment bug where it wouldnt break/plaace on the crrosshair. it was because i was using floor, when
+the system used 0.5 units for blocks. easy rework.

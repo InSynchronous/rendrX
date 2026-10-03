@@ -94,40 +94,38 @@ void Chunk::addQuad(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec3 p4,
 }
 
 void Chunk::addFace(Block type, Face face, glm::vec3 pos) {
-    constexpr float s = 0.5f;
-
     UV uv = blockToUV[static_cast<int>(type)][static_cast<int>(face)];
 
     switch (face) {
 
     case Face::FRONT:
-        addQuad(pos + glm::vec3{-s, -s, +s}, pos + glm::vec3{+s, -s, +s},
-                pos + glm::vec3{+s, +s, +s}, pos + glm::vec3{-s, +s, +s}, uv);
+        addQuad(pos + glm::vec3{0, 0, 1}, pos + glm::vec3{1, 0, 1},
+                pos + glm::vec3{1, 1, 1}, pos + glm::vec3{0, 1, 1}, uv);
         break;
 
     case Face::BACK:
-        addQuad(pos + glm::vec3{+s, -s, -s}, pos + glm::vec3{-s, -s, -s},
-                pos + glm::vec3{-s, +s, -s}, pos + glm::vec3{+s, +s, -s}, uv);
+        addQuad(pos + glm::vec3{1, 0, 0}, pos + glm::vec3{0, 0, 0},
+                pos + glm::vec3{0, 1, 0}, pos + glm::vec3{1, 1, 0}, uv);
         break;
 
     case Face::TOP:
-        addQuad(pos + glm::vec3{-s, +s, +s}, pos + glm::vec3{+s, +s, +s},
-                pos + glm::vec3{+s, +s, -s}, pos + glm::vec3{-s, +s, -s}, uv);
+        addQuad(pos + glm::vec3{0, 1, 1}, pos + glm::vec3{1, 1, 1},
+                pos + glm::vec3{1, 1, 0}, pos + glm::vec3{0, 1, 0}, uv);
         break;
 
     case Face::BOTTOM:
-        addQuad(pos + glm::vec3{-s, -s, -s}, pos + glm::vec3{+s, -s, -s},
-                pos + glm::vec3{+s, -s, +s}, pos + glm::vec3{-s, -s, +s}, uv);
+        addQuad(pos + glm::vec3{0, 0, 0}, pos + glm::vec3{1, 0, 0},
+                pos + glm::vec3{1, 0, 1}, pos + glm::vec3{0, 0, 1}, uv);
         break;
 
     case Face::RIGHT:
-        addQuad(pos + glm::vec3{+s, -s, +s}, pos + glm::vec3{+s, -s, -s},
-                pos + glm::vec3{+s, +s, -s}, pos + glm::vec3{+s, +s, +s}, uv);
+        addQuad(pos + glm::vec3{1, 0, 1}, pos + glm::vec3{1, 0, 0},
+                pos + glm::vec3{1, 1, 0}, pos + glm::vec3{1, 1, 1}, uv);
         break;
 
     case Face::LEFT:
-        addQuad(pos + glm::vec3{-s, -s, -s}, pos + glm::vec3{-s, -s, +s},
-                pos + glm::vec3{-s, +s, +s}, pos + glm::vec3{-s, +s, -s}, uv);
+        addQuad(pos + glm::vec3{0, 0, 0}, pos + glm::vec3{0, 0, 1},
+                pos + glm::vec3{0, 1, 1}, pos + glm::vec3{0, 1, 0}, uv);
         break;
     }
 }

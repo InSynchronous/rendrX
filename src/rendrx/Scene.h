@@ -12,8 +12,8 @@ namespace rendrx {
 struct Hit {
     bool hit = false;
 
-    glm::ivec3 block;
-    glm::ivec3 normal;
+    glm::ivec3 block{0};
+    glm::ivec3 normal{0};
 
     float distance = 0.0f;
 };

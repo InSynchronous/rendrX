@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include "glad/gl.h"
+#include "rendrx/Block.h"
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <cstdlib>
@@ -681,18 +682,9 @@ void Scene::render() {
     }
 
     // Foward vector
-    Ray ray = {cameraPos, direction};
-    Hit hit = raycast(ray, 8.0f); // reach
-
-    if (hit.hit &&
-        (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)) {
-
-        world->setBlock(hit.block, Block::AIR);
-    }
-
     // Matricies
-    glm::mat4 model =
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f));
+    // Blocks are emitted in world space already, no model offset needed
+    glm::mat4 model{1.0f};
 
     // Look at the triangle at origin ALWAYS
     glm::mat4 view = glm::lookAt(cameraPos,                  // pos
@@ -707,6 +699,32 @@ void Scene::render() {
         0.1f,                                      // near
         500.0f                                     // far
     );
+
+    // Ray to block
+    glm::vec4 rayClip(0.0f, 0.0f, -1.0f, 1.0f);
+
+    glm::vec4 rayEye = glm::inverse(projection) * rayClip;
+
+    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
+
+    glm::vec3 rayDirection =
+        glm::normalize(glm::vec3(glm::inverse(view) * rayEye));
+
+    Ray ray{cameraPos, rayDirection};
+    Hit hit = raycast(ray, 8.0f);
+
+    if (hit.hit &&
+        (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)) {
+
+        world->setBlock(hit.block, Block::AIR);
+    }
+    if (hit.hit &&
+        (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)) {
+        glm::ivec3 location = hit.block;
+        location =
+            location + hit.normal; // facing outwards perpendicular kinda thing
+        world->setBlock(location, Block::STONE);
+    }
 
     glm::mat4 viewProjection = projection * view;
 
@@ -896,16 +914,9 @@ Hit Scene::raycast(Ray &r, float maxDistance) {
     glm::ivec3 hitNormal(0);
     float distance = 0.0f;
 
-    while (distance <= maxDistance) {
-
-        if (world->getBlock(voxel) != Block::AIR) {
-            result.hit = true;
-            result.block = voxel;
-            result.normal = hitNormal;
-            result.distance = distance;
-            return result;
-        }
-
+    // Advance to the first voxel boundary so we never report the voxel the
+    // camera is currently inside as a hit
+    auto advance = [&]() {
         if (tMax.x <= tMax.y && tMax.x <= tMax.z) {
 
             voxel.x += step.x;
@@ -930,6 +941,21 @@ Hit Scene::raycast(Ray &r, float maxDistance) {
 
             hitNormal = glm::ivec3(0, 0, -step.z);
         }
+    };
+
+    advance();
+
+    while (distance <= maxDistance) {
+
+        if (world->getBlock(voxel) != Block::AIR) {
+            result.hit = true;
+            result.block = voxel;
+            result.normal = hitNormal;
+            result.distance = distance;
+            return result;
+        }
+
+        advance();
     }
 
     return result;
