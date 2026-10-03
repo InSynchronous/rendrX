@@ -218,7 +218,7 @@ void Scene::init() {
     sunLightLoc = glGetUniformLocation(lightingShader, "sunLight");
     groundLightLoc = glGetUniformLocation(lightingShader, "groundLight");
 
-    sunDirection = glm::normalize(glm::vec3(0.4f, 1.0f, 0.3f));
+    sunDirection = glm::normalize(glm::vec3(0.5f, 0.6f, 0.35f));
 
     glm::vec3 sunLight(0.45f, 0.42f, 0.36f);
 
@@ -580,8 +580,6 @@ void Scene::render() {
     glm::mat4 viewProjection = projection * view;
 
     // pass 0
-    glm::vec3 sunDirection = glm::normalize(glm::vec3(0.4f, 1.0f, 0.3f));
-
     glm::vec3 lightPos = cameraPos + sunDirection * 200.0f;
 
     glm::mat4 lightView =
@@ -600,9 +598,6 @@ void Scene::render() {
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-
     glClearDepth(1.0);
     glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -613,12 +608,24 @@ void Scene::render() {
     glUniformMatrix4fv(shadowLightSpaceLocation, 1, GL_FALSE,
                        &lightSpaceMatrix[0][0]);
 
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1.1f, 4.0f);
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(shadowShader);
+
     for (auto &[position, chunk] : world->chunks) {
+        if (!isChunkVisible(position, lightSpaceMatrix))
+            continue;
         chunk->draw();
     }
 
-    // pass 1
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+
     glCullFace(GL_BACK);
     glViewport(0, 0, 1280, 720);
 

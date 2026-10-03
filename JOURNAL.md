@@ -752,3 +752,11 @@ Turned on culling for both shadow maps and geometry maps, and also reduced shado
 
 ## October 3rd, 2026
 Let's try to improve FPS and shadow quality.
+
+I added PCF, which basically blurs the shadows and makes them smoother. I also fixed a bunch of dumb things involving the angle
+of the light as well. These ideally working together should solve my problems quite well. I also did opengl's polygon offset
+since I read online to use that. Don't really understand all of it, but it seemed to improve quality.
+
+Rn the fps is around 40 not loading chunks, and during chunk load it freezes up.
+
+I got 20 fps back just by adding a frustum cull to the shadow renderer. Wow that was easy. Still not optimal. I need more fps.

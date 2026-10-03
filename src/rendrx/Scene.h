@@ -175,6 +175,36 @@ class Scene {
     
         uniform sampler2D shadowMap;
         uniform mat4 lightSpaceMatrix;
+
+        float sampleShadow(vec3 shadowCoords)
+        {
+            float bias = 0.0008;
+            float texelSize = 1.0 / 1024.0;
+        
+            float shadow = 0.0;
+        
+            for (int y = -1; y <= 1; ++y)
+            {
+                for (int x = -1; x <= 1; ++x)
+                {
+                    vec2 offset =
+                        vec2(x, y) * texelSize;
+        
+                    float shadowDepth =
+                        texture(
+                            shadowMap,
+                            shadowCoords.xy + offset
+                        ).r;
+        
+                    shadow +=
+                        shadowCoords.z - bias > shadowDepth
+                            ? 1.0
+                            : 0.0;
+                }
+            }
+        
+            return shadow / 9.0;
+        }
          
         void main()
         {
@@ -194,24 +224,17 @@ class Scene {
     
             float shadow = 0.0;
 
-if (
-    shadowCoords.x >= 0.0 &&
-    shadowCoords.x <= 1.0 &&
-    shadowCoords.y >= 0.0 &&
-    shadowCoords.y <= 1.0 &&
-    shadowCoords.z >= 0.0 &&
-    shadowCoords.z <= 1.0
-)
-{
-    float shadowDepth = texture(shadowMap, shadowCoords.xy).r;
-    float currentDepth = shadowCoords.z;
-
-    float bias = 0.005;
-
-    shadow = currentDepth - bias > shadowDepth
-        ? 1.0
-        : 0.0;
-}
+            if (
+                shadowCoords.x >= 0.0 &&
+                shadowCoords.x <= 1.0 &&
+                shadowCoords.y >= 0.0 &&
+                shadowCoords.y <= 1.0 &&
+                shadowCoords.z >= 0.0 &&
+                shadowCoords.z <= 1.0
+            )
+            {
+                shadow = sampleShadow(shadowCoords);
+            }
     
             float hemisphere = normal.y * 0.5 + 0.5;
     
