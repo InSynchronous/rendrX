@@ -760,3 +760,47 @@ since I read online to use that. Don't really understand all of it, but it seeme
 Rn the fps is around 40 not loading chunks, and during chunk load it freezes up.
 
 I got 20 fps back just by adding a frustum cull to the shadow renderer. Wow that was easy. Still not optimal. I need more fps.
+
+Solved a bug where the background color kept changing as i went forward. It was because the lighting system was lighting the 
+background color pixel lol. I fixed that by setting the alpha value to like 1, and detecting that.
+
+Another odd bug is that on my monitor the thing displays fine, but on my screen, it only uses the bottom left hand of the screen.
+
+Reading about it, its probably my hyprland config that scales it up. I can solve this:
+```lua 
+hl.monitor({
+    output   = "eDP-1",
+    mode     = "preferred",
+    position = "0x0",
+    scale    = 1.2,
+})
+
+hl.monitor({
+    output   = "DP-1",
+    mode     = "2560x1440@144",
+    position = "auto-right",
+    scale    = 1,
+})
+
+```
+
+I need to actually look at what size i get from glfw and use that instead.
+
+```
+Framebuffer: 1280x720
+Window: 1280x720
+```
+
+Fah. Printouts aren't helping. How do i get the code to truley figure out the window size.
+
+I added one before draw triangles and i got it!
+
+```
+GL viewport: 0, 0 1280x720
+GLFW framebuffer: 1536x864
+```
+
+It seems glfwGetFramebuffer's return value changed. Idk how to figure it out tho and use this.
+
+I just decided to use glViewPort and forcefully resized the window. Let me make this code
+also not use hardcoded numbers and use a proper variable.

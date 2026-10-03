@@ -210,7 +210,14 @@ class Scene {
         {
             vec3 position = texture(gPosition, uv).rgb;
             vec3 normal = normalize(texture(gNormal, uv).rgb);
-            vec3 albedo = texture(gAlbedo, uv).rgb;
+            vec4 albedoSample = texture(gAlbedo, uv);
+            if (albedoSample.a == 0.0) {
+                // Background pixel, do not light
+                FragColor = vec4(0.1, 0.2, 0.3, 1.0);
+                return;
+            }
+            vec3 albedo = albedoSample.rgb;
+
     
             vec4 lightSpacePosition =
                 lightSpaceMatrix * vec4(position, 1.0);
@@ -285,6 +292,9 @@ class Scene {
     bool shouldClose();
     void launch();
     void render();
+
+    int frameBufferLength, windowLength = 1280;
+    int frameBufferHeight, windowHeight = 720;
 
     const glm::vec3 &getCameraPos() const { return cameraPos; }
     const glm::vec3 &getPrevCameraPos() const { return prevCameraPos; }

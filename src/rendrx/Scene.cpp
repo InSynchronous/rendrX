@@ -19,7 +19,8 @@ Scene::Scene() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(1280, 720, "rendrX demonstration", NULL, NULL);
+    window = glfwCreateWindow(windowLength, windowHeight,
+                              "rendrX demonstration", NULL, NULL);
 
     if (!window) {
         std::cerr << "Failed to create GLFW window, aborting!" << std::endl;
@@ -29,6 +30,13 @@ Scene::Scene() {
     if (!gladLoadGL(glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD\n";
     }
+
+    glfwGetFramebufferSize(window, &frameBufferLength, &frameBufferHeight);
+    glfwGetWindowSize(window, &windowLength, &windowHeight);
+
+    std::cout << "Framebuffer: " << frameBufferLength << "x"
+              << frameBufferHeight << '\n';
+    std::cout << "Window: " << windowLength << "x" << windowHeight << '\n';
 }
 
 void Scene::init() {
@@ -264,8 +272,8 @@ void Scene::init() {
     glGenTextures(1, &gPositionLoc);
     glBindTexture(GL_TEXTURE_2D, gPositionLoc);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 1280, 720, 0, GL_RGB, GL_FLOAT,
-                 nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, frameBufferLength,
+                 frameBufferHeight, 0, GL_RGB, GL_FLOAT, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -276,8 +284,8 @@ void Scene::init() {
     glGenTextures(1, &gNormalLoc);
     glBindTexture(GL_TEXTURE_2D, gNormalLoc);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 1280, 720, 0, GL_RGB, GL_FLOAT,
-                 nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, frameBufferLength,
+                 frameBufferHeight, 0, GL_RGB, GL_FLOAT, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -288,14 +296,14 @@ void Scene::init() {
     glGenTextures(1, &gDepthLoc);
     glBindTexture(GL_TEXTURE_2D, gDepthLoc);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 1280, 720, 0,
-                 GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, frameBufferLength,
+                 frameBufferHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 
     glGenTextures(1, &gAlbedoLoc);
     glBindTexture(GL_TEXTURE_2D, gAlbedoLoc);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1280, 720, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, frameBufferLength,
+                 frameBufferHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -355,6 +363,7 @@ void Scene::init() {
         std::cerr << "[GBuffer] ERROR: Framebuffer is not complete!\n";
         std::exit(-1);
     }
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // unbind
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -362,7 +371,7 @@ void Scene::init() {
     // Init stuff
     glEnable(GL_DEPTH_TEST);
 
-    glClearColor(0.1, 0.2, 0.3, 1.0);
+    glClearColor(0.1, 0.2, 0.3, 0.0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -571,22 +580,24 @@ void Scene::render() {
                                  glm::vec3(0.0f, 1.0f, 0.0f) // up
     );
 
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), // FOV
-                                            1280.0f / 720.0f,    // aspect ratio
-                                            0.1f,                // near
-                                            500.0f               // far
+    glm::mat4 projection = glm::perspective(
+        glm::radians(45.0f), // FOV
+        static_cast<float>(frameBufferLength) /
+            static_cast<float>(frameBufferHeight), // aspect ratio
+        0.1f,                                      // near
+        500.0f                                     // far
     );
 
     glm::mat4 viewProjection = projection * view;
 
     // pass 0
-    glm::vec3 lightPos = cameraPos + sunDirection * 200.0f;
+    glm::vec3 lightPos = cameraPos + sunDirection * 300.0f;
 
     glm::mat4 lightView =
         glm::lookAt(lightPos, cameraPos, glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::mat4 lightProjection =
-        glm::ortho(-120.0f, 120.0f, -120.0f, 120.0f, 1.0f, 400.0f);
+        glm::ortho(-250.0f, 250.0f, -250.0f, 250.0f, 1.0f, 600.0f);
     glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
     glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
@@ -627,7 +638,7 @@ void Scene::render() {
     glDisable(GL_POLYGON_OFFSET_FILL);
 
     glCullFace(GL_BACK);
-    glViewport(0, 0, 1280, 720);
+    glViewport(0, 0, frameBufferLength, frameBufferHeight);
 
     glBindFramebuffer(GL_FRAMEBUFFER, gBufferLoc);
 
@@ -653,9 +664,11 @@ void Scene::render() {
     }
 
     // PASS #2, fancy shaders
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    glfwGetFramebufferSize(window, &frameBufferLength, &frameBufferHeight);
+
+    glViewport(0, 0, frameBufferLength, frameBufferHeight);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glDisable(GL_DEPTH_TEST);
