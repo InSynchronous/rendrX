@@ -814,3 +814,11 @@ Lets try to get block breaking too work.
 
 this took a while of debugging. but basically the loop has to find the chunk, find the block in the chunk, change it,
 then clear the vertecies, regenerate them, and push to screen. Works amazing.
+
+
+### crosshair
+Going to be kinda complex. Need another shader, then need to commpile it, then need to run it. Man this sucks.
+i should probablyy abstract shader code into a class so it can be re-used but im tryna finish this project.
+
+This took a while, but basically i pass the screen size as a uniform to the shader, and then just scale it so its
+aways 20x20 px in size. it looks pretty nice imo.

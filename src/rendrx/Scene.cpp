@@ -173,6 +173,112 @@ void Scene::init() {
         std::cout << "[Shader] Program ID: " << lightingShader << '\n';
     }
 
+    crosshairVertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(crosshairVertexShader, 1, &crosshairVertexShaderSource,
+                   NULL);
+    glCompileShader(crosshairVertexShader);
+
+    success = GL_FALSE;
+    glGetShaderiv(crosshairVertexShader, GL_COMPILE_STATUS, &success);
+
+    if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(crosshairVertexShader, sizeof(infoLog), nullptr,
+                           infoLog);
+
+        std::cerr << "[Shader] Crosshair vertex shader compilation FAILED.\n";
+        std::cerr << "[Shader] Shader ID: " << crosshairVertexShader << '\n';
+        std::cerr << "[Shader] Compiler log:\n" << infoLog << '\n';
+
+        std::exit(-1);
+    }
+
+    std::cout << "[Shader] Crosshair vertex shader compiled successfully. ID: "
+              << crosshairVertexShader << '\n';
+    crosshairFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(crosshairFragmentShader, 1, &crosshairFragmentShaderSource,
+                   NULL);
+    glCompileShader(crosshairFragmentShader);
+
+    success = GL_FALSE;
+    glGetShaderiv(crosshairFragmentShader, GL_COMPILE_STATUS, &success);
+
+    if (!success) {
+        char infoLog[1024];
+        glGetShaderInfoLog(crosshairFragmentShader, sizeof(infoLog), nullptr,
+                           infoLog);
+
+        std::cerr << "[Shader] Crosshair fragment shader compilation FAILED.\n";
+        std::cerr << "[Shader] Shader ID: " << crosshairFragmentShader << '\n';
+        std::cerr << "[Shader] Compiler log:\n" << infoLog << '\n';
+
+        std::exit(-1);
+    }
+
+    std::cout
+        << "[Shader] Crosshair fragment shader compiled successfully. ID: "
+        << crosshairFragmentShader << '\n';
+
+    crosshairShader = glCreateProgram();
+
+    if (crosshairShader == 0) {
+        std::cerr
+            << "[Shader] ERROR: Failed to create crosshair shader program.\n";
+        std::exit(-1);
+    }
+
+    std::cout << "[Shader] Created crosshair shader program. ID: "
+              << crosshairShader << '\n';
+
+    glAttachShader(crosshairShader, crosshairVertexShader);
+
+    if (glGetError() != GL_NO_ERROR) {
+        std::cerr
+            << "[Shader] ERROR: Failed to attach crosshair vertex shader. ID: "
+            << crosshairVertexShader << '\n';
+        std::exit(-1);
+    }
+
+    std::cout << "[Shader] Attached crosshair vertex shader. ID: "
+              << crosshairVertexShader << '\n';
+
+    glAttachShader(crosshairShader, crosshairFragmentShader);
+
+    if (glGetError() != GL_NO_ERROR) {
+        std::cerr << "[Shader] ERROR: Failed to attach crosshair fragment "
+                     "shader. ID: "
+                  << crosshairFragmentShader << '\n';
+        std::exit(-1);
+    }
+
+    std::cout << "[Shader] Attached crosshair fragment shader. ID: "
+              << crosshairFragmentShader << '\n';
+
+    std::cout << "[Shader] Linking crosshair program " << crosshairShader
+              << "...\n";
+
+    glLinkProgram(crosshairShader);
+
+    success = GL_FALSE;
+    glGetProgramiv(crosshairShader, GL_LINK_STATUS, &success);
+
+    if (!success) {
+        char infoLog[1024];
+
+        glGetProgramInfoLog(crosshairShader, sizeof(infoLog), nullptr, infoLog);
+
+        std::cerr << "[Shader] Crosshair program linking FAILED.\n";
+        std::cerr << "[Shader] Program ID: " << crosshairShader << '\n';
+        std::cerr << "[Shader] Linker log:\n" << infoLog << '\n';
+
+        std::exit(-1);
+    }
+
+    std::cout << "[Shader] Crosshair program linked successfully.\n";
+    std::cout << "[Shader] Program ID: " << crosshairShader << '\n';
+
+    screenSizeLoc = glGetUniformLocation(crosshairShader, "screenSize");
+
     shadowMapUniform = glGetUniformLocation(lightingShader, "shadowMap");
 
     lightSpaceMatrixUniform =
@@ -721,7 +827,19 @@ void Scene::render() {
 
     glBindVertexArray(fullscreenVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindVertexArray(0);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glUseProgram(crosshairShader);
+
+    glUniform2f(screenSizeLoc, static_cast<float>(frameBufferLength),
+                static_cast<float>(frameBufferHeight));
+
+    glLineWidth(2.0f);
+    glDrawArrays(GL_LINES, 0, 4);
+
+    glDisable(GL_BLEND);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

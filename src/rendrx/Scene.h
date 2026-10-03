@@ -29,6 +29,11 @@ class Scene {
     unsigned int geometryVertexShader, geometryFragmentShader,
         lightingFragmentShader, lightingVertexShader, shadowVertexShader,
         shadowShader, lightingShader, geometryShader, texture, fullscreenVAO;
+    // more shaders ahghghgh refactoring sucks
+    unsigned int crosshairVertexShader;
+    unsigned int crosshairFragmentShader;
+    unsigned int crosshairShader;
+    GLint screenSizeLoc;
     GLint modelLocation;
     GLint viewLocation;
     GLint projectionLocation;
@@ -296,6 +301,44 @@ class Scene {
         }
         
     )";
+
+    const char *crosshairVertexShaderSource = R"(
+        #version 330 core
+    
+        uniform vec2 screenSize;
+    
+        const vec2 positions[4] = vec2[](
+            vec2(-10.0, 0.0),
+            vec2( 10.0, 0.0),
+            vec2(0.0, -10.0),
+            vec2(0.0,  10.0)
+        );
+    
+        void main()
+        {
+            vec2 pixel = positions[gl_VertexID];
+    
+            vec2 center = screenSize * 0.5;
+    
+            pixel += center;
+    
+            vec2 ndc = pixel / screenSize * 2.0 - 1.0;
+    
+            gl_Position = vec4(ndc.x, ndc.y, 0.0, 1.0);
+        }
+    )";
+
+    const char *crosshairFragmentShaderSource = R"(
+        #version 330 core
+    
+        out vec4 FragColor;
+    
+        void main()
+        {
+            FragColor = vec4(1.0, 1.0, 1.0, 0.5);
+        }
+    )";
+
     void init();
     void loadTextures();
     bool isChunkVisible(glm::ivec2 chunkPos, const glm::mat4 &viewProjection);
