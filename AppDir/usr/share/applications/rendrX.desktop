@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=rendrX
+Comment=OpenGL voxel game
+Exec=rendrX
+Icon=rendrX
+Categories=Game;Graphics;
+Terminal=false
